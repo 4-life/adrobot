@@ -33,6 +33,7 @@ The backend follows the **Dependency Inversion Principle** and **Hexagonal Archi
 
 - The database and the API are vendor-neutral: `external_id`, `offer_id`, `state`, `/tracker/*`.
 - `streams.raw` stores the tracker's own stream data, opaque to the core. It's handed back to the adapter on push, so a push changes only what AdRobot manages.
+- **The fake tracker** (`app/tracker/fake/`, `TRACKER=fake`): a second adapter behind the same port, in memory and seeded with made-up data. Use it to test the dashboard and the push flow locally (many offers, pins, removals, conflicts) without touching the shared Keitaro.
 - **Adding another tracker**: a new package `app/tracker/<name>/` implementing `TrackerProvider`, plus one branch in `factory.py`. Merge, drafts, shares and the UI don't change.
 - Core tests use port types or a fake provider. Only the adapter's own tests touch Keitaro's JSON.
 
@@ -124,8 +125,8 @@ A new campaign is always pending.
 
 Keitaro's `GET /offers` has no search parameter, so the `api` loads the whole list, caches it in memory for 60 s, and searches it by name or ID.
 
-- Only offers with `state` `active` are listed.
-- Offers already active in the stream are shown disabled.
+- **Every** offer is listed, with no cap. The list opens on focus with all of them and narrows as you type. Archived ones (`state` not `active`) are shown but can't be picked.
+- Offers already in the stream (active or removed) are hidden from the search.
 - A removed offer can't be added from the search; use its **Bring back** button instead.
 
 Domains, groups and traffic sources are cached the same way.
@@ -180,7 +181,7 @@ React Router SSR. Only the dashboard server talks to the API: route loaders and 
 | `app/routes/campaign-action.ts`, `offers-search.ts`, `new-campaign-data.ts` | Resource routes for fetchers: every campaign form posts to `campaign-action` (then each page's loader reloads); offer search; the New campaign dialog's defaults and selects |
 | `app/components/shared/` | Feature-agnostic UI: `Header`, `Footer`, `Button`, `Badge`, `Dialog` (native `<dialog>`), `ConfirmDialog` (never `window.confirm`), `Notice`, `Spinner`, `PinIcon`, `Field` / `TextInput` / `Select` |
 | `app/features/campaigns/` | The campaigns feature. `api.server.ts` has the API calls, `actions.server.ts` the intent dispatcher, `types.ts` the API shapes, and `filters.ts` / `countries.ts` hold pure helpers. `useCampaignAction.ts` posts one action per component, with its own pending state and result |
-| `app/features/campaigns/components/` | `CampaignsView`, `CampaignFilters`, `CampaignsTable`, `CampaignDetails`, `CampaignBadges`, `CampaignActions`, `ConflictBanner`, `GeoRow`, `OffersTable`, `OfferRow`, `ShareCell`, `ChangeBadge`, `PinToggle`, `RemovedOffers`, `OfferSearch`, `AddOffer`, `ActionFeedback`, `SyncBar`, `PushAllResults`, `NewCampaignDialog` |
+| `app/features/campaigns/components/` | `CampaignsView`, `CampaignFilters`, `CampaignsTable`, `CampaignDetails`, `CampaignBadges`, `CampaignActions`, `ConflictBanner`, `FetchCampaignButton`, `GeoRow`, `OffersTable`, `OfferRow`, `ShareCell`, `ChangeBadge`, `PinToggle`, `RemovedOffers`, `OfferSearch`, `AddOffer`, `ActionFeedback`, `SyncBar`, `PushAllResults`, `NewCampaignDialog` |
 
 **Page**:
 
@@ -189,7 +190,7 @@ React Router SSR. Only the dashboard server talks to the API: route loaders and 
   - **New campaign**.
   - The pending count, with **Push all** and **Cancel all**.
 - **Campaigns table** (`/`): campaign (name → its page, alias), status badges, tracker id, domain, group, source, active offers, geo countries. Creating a draft opens its page.
-- **Campaign page** (`/campaigns/:id`): everything below for one campaign. After every action the loader reloads it. Cancelling a new draft deletes it and goes back to the table.
+- **Campaign page** (`/campaigns/:id`): everything below for one campaign. After every action the loader reloads it. Cancelling a new draft deletes it and goes back to the table. **Fetch from Keitaro** refreshes just this campaign (fast, unlike the full Fetch streams), with its last fetch time.
   - The header shows its name, Keitaro ID (or "New"), alias, domain, group and source, the Not synced / Conflict / Archived badge, **Push to KT** and **Cancel changes**.
   - **Geo stream**: one small read-only line at the bottom of the card: its countries → the redirect target. The countries are set when the campaign is created.
   - **Offers stream**: a table with offer, share % with a pin icon after it (pins the offer at its current share; click again to unpin), change marker and remove button, plus **Add offer** (search) and a collapsible **Removed** list with **Bring back**.
@@ -209,8 +210,10 @@ There's no auth: the MVP runs only on the local machine (see [Security](#securit
 | `GET /campaigns` | every campaign with their streams, draft offers, removed offers, pending/conflict/new/archived flags; per offer its `change` (`added` / `removed` / `share`), per stream `geo_added` / `geo_removed` and `errors` (why the draft can't be pushed). Every edit endpoint returns the campaign in this shape |
 | `GET /campaigns/defaults` | prefills the New campaign form: the next name, a generated alias, `[DEFAULT_GEO]`, the redirect URL, and `name_prefix` (`CAMPAIGN_NAME_PREFIX`: the table's default search) |
 | `GET /campaigns/{id}` | one campaign, in the same shape as the list; `404` for an unknown id |
+| `POST /campaigns/{id}/fetch` | refreshes this one campaign from the tracker, like a full fetch would (a pending draft is kept; a change under it is a Conflict; gone from the tracker: archived) → the campaign. `422` for a new draft |
 | `POST /campaigns` | `{name?, alias?, countries?, domain_id, group_id?, traffic_source_id?, offer_ids[]}` → `201` with a new **draft** campaign (New, pending). Blank name/alias/countries use the defaults. Domain, group, source and offers must be active in the tracker (`422`); a duplicate alias is `409` |
-| `GET /tracker/offers?q=` · `GET /tracker/domains` · `GET /tracker/groups` · `GET /tracker/sources` | tracker lookups (cached for 60 s) |
+| `GET /tracker/offers?q=` | every offer matching `q` (name or id; empty: all), archived included, each with `active` (cached for 60 s) |
+| `GET /tracker/domains` · `GET /tracker/groups` · `GET /tracker/sources` | the active ones, for the New campaign selects (cached for 60 s) |
 | `PUT /streams/{id}/geo` | `{countries[]}`: set the geo stream's countries in the draft (the dashboard doesn't use it: geo is read-only after creation) |
 | `POST /streams/{id}/offers` | `{offer_id}`: add an offer to the draft. `409` if it's already active or removed (use bring back). |
 | `PATCH /streams/{id}/offers/{offer_id}` | `{pinned, pinned_share}` (1-100). `offer_id` is the tracker's offer id; `{id}` is AdRobot's stream id |
@@ -238,7 +241,7 @@ Everything is set in `.env`. `.env.example` lists every variable.
 
 | Variable | |
 |---|---|
-| `TRACKER` | the tracker adapter (`keitaro`, the only one so far) |
+| `TRACKER` | the tracker adapter: `keitaro`, or `fake` for local testing: in-memory sample data (20 offers, 3 of them archived; 3 campaigns, one with an unsupported layout), nothing reaches Keitaro, reset when the API restarts |
 | `KEITARO_URL` | the Keitaro panel's address without a path, e.g. `https://tracker.example.com` (required) |
 | `KEITARO_API_KEY` | an Admin API key created in Keitaro (required) |
 | `GEO_REDIRECT_URL` | where the geo stream sends visitors (`https://google.com`) |

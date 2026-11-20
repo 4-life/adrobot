@@ -5,6 +5,7 @@ import { AddOffer } from "../AddOffer/AddOffer";
 import { CampaignActions } from "../CampaignActions/CampaignActions";
 import { CampaignBadges } from "../CampaignBadges/CampaignBadges";
 import { ConflictBanner } from "../ConflictBanner/ConflictBanner";
+import { FetchCampaignButton } from "../FetchCampaignButton/FetchCampaignButton";
 import { GeoRow } from "../GeoRow/GeoRow";
 import { OffersTable } from "../OffersTable/OffersTable";
 import { RemovedOffers } from "../RemovedOffers/RemovedOffers";
@@ -37,7 +38,10 @@ export function CampaignDetails({ campaign, redirectUrl }: { campaign: Campaign;
           </div>
           <Meta campaign={campaign} />
         </div>
-        {!readOnly && <CampaignActions campaign={campaign} blocked={blocked} />}
+        <div className="space-y-2">
+          {campaign.external_id !== null && <FetchCampaignButton campaign={campaign} />}
+          {!readOnly && <CampaignActions campaign={campaign} blocked={blocked} />}
+        </div>
       </header>
 
       {campaign.conflict && <ConflictBanner campaignId={campaign.id} />}

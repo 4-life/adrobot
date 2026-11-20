@@ -12,6 +12,9 @@ export function CampaignActions({ campaign, blocked }: { campaign: Campaign; blo
   const action = useCampaignAction();
   useLeaveWhenDeleted(action.result);
   const canAct = campaign.pending && !action.busy;
+  // "Pushed to the tracker" / "Changes cancelled" is stale once there are new unpushed
+  // changes; errors stay until the next action.
+  const outdated = Boolean(action.result?.ok) && campaign.pending && !action.busy;
 
   return (
     <div className="space-y-2">
@@ -38,7 +41,7 @@ export function CampaignActions({ campaign, blocked }: { campaign: Campaign; blo
           Push to KT
         </Button>
       </div>
-      <ActionFeedback result={action.result} />
+      <ActionFeedback result={outdated ? undefined : action.result} />
     </div>
   );
 }

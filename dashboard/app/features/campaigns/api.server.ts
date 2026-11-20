@@ -22,6 +22,9 @@ export const getCampaign = (campaignId: number) => api<Campaign>(`/campaigns/${c
 export const fetchStreams = () =>
   api<FetchResult>("/sync/fetch", { method: "POST", timeoutMs: LONG_TIMEOUT_MS });
 
+export const fetchCampaign = (campaignId: number) =>
+  api<Campaign>(`/campaigns/${campaignId}/fetch`, { method: "POST" });
+
 export const pushCampaign = (campaignId: number) =>
   api<PushResult>(`/campaigns/${campaignId}/push`, { method: "POST" });
 

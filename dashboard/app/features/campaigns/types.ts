@@ -55,7 +55,7 @@ export type Campaign = {
 };
 
 export type FetchResult = { fetched_at: string; campaigns: number; conflicts: number[] };
-export type LookupItem = { id: number; name: string };
+export type LookupItem = { id: number; name: string; active: boolean }; // false: archived
 export type CancelResult = { deleted: boolean; campaign: Campaign | null };
 export type CancelAllResult = { cancelled: number; deleted: number };
 export type PushResult = { pushed: boolean; mismatch: string[]; campaign: Campaign };

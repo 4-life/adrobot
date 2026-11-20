@@ -25,6 +25,13 @@ async function dispatch(form: FormData): Promise<ActionResult> {
       const suffix = conflicts ? `, ${conflicts} with a conflict` : "";
       return { ok: true, message: `Fetched ${result.campaigns} campaigns${suffix}` };
     }
+    case "fetch-one": {
+      const campaign = await campaignsApi.fetchCampaign(id(form, "campaignId"));
+      const message = campaign.conflict
+        ? "Fetched: the tracker changed under your draft (see the conflict)"
+        : "Fetched from Keitaro";
+      return { ok: true, message };
+    }
     case "push": {
       const result = await campaignsApi.pushCampaign(id(form, "campaignId"));
       const message = result.pushed ? "Pushed to the tracker" : "Nothing to push";

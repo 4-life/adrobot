@@ -47,7 +47,7 @@ function distinct(pairs: [number | null, string | null][]): LookupItem[] {
     }
   }
   return [...byId]
-    .map(([itemId, name]) => ({ id: itemId, name }))
+    .map(([itemId, name]) => ({ id: itemId, name, active: true }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
