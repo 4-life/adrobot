@@ -99,6 +99,25 @@ class PinIn(BaseModel):
     pinned_share: int | None = None
 
 
+class CampaignDefaultsOut(BaseModel):
+    """Prefills the New campaign form."""
+
+    name: str
+    alias: str
+    countries: list[str]
+    redirect_url: str
+
+
+class CreateCampaignIn(BaseModel):
+    name: str = ""  # blank: the next CAMPAIGN_NAME_PREFIX + N
+    alias: str = ""  # blank: generated from the name
+    countries: list[str] = []  # empty: DEFAULT_GEO
+    domain_id: int
+    group_id: int | None = None
+    traffic_source_id: int | None = None
+    offer_ids: list[int]
+
+
 def offer_out(offer: StreamOffer) -> OfferOut:
     return OfferOut(
         id=offer.id,

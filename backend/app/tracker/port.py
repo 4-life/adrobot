@@ -59,6 +59,38 @@ class LookupItem:
     active: bool = True
 
 
+@dataclass(frozen=True)
+class OfferShare:
+    offer_id: int
+    share: int
+
+
+@dataclass(frozen=True)
+class NewCampaign:
+    name: str
+    alias: str
+    domain_id: int
+    group_id: int | None
+    traffic_source_id: int | None
+
+
+@dataclass(frozen=True)
+class NewGeoStream:
+    """Sends visitors from `countries` to `redirect_url`; the campaign's first stream."""
+
+    campaign_id: int  # the tracker's campaign id
+    countries: list[str]
+    redirect_url: str
+
+
+@dataclass(frozen=True)
+class NewOffersStream:
+    """Splits all other traffic between `offers` by share; the campaign's second stream."""
+
+    campaign_id: int  # the tracker's campaign id
+    offers: list[OfferShare]
+
+
 class TrackerError(Exception):
     """Any tracker failure. `status` is the tracker's HTTP status, 0 when nothing answered."""
 
@@ -80,6 +112,14 @@ class TrackerProvider(Protocol):
     async def list_groups(self) -> list[LookupItem]: ...
 
     async def list_sources(self) -> list[LookupItem]: ...
+
+    # Creating a campaign: one call per step, each returning the tracker's id, so a push that
+    # fails partway resumes from the failed step (Phase 5).
+    async def create_campaign(self, campaign: NewCampaign) -> int: ...
+
+    async def create_geo_stream(self, stream: NewGeoStream) -> int: ...
+
+    async def create_offers_stream(self, stream: NewOffersStream) -> int: ...
 
     async def aclose(self) -> None: ...
 

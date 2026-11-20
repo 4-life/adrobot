@@ -90,7 +90,7 @@ adrobot/
 - Endpoints: add, patch (pin), remove, restore, cancel and cancel-all.
 - Unit tests: share tables (1 to 10 offers, with and without pins, edge cases), the diff and restore.
 
-## Phase 4: Create Campaign
+## Phase 4: Create Campaign — done (the first real push waits for Phase 5)
 
 - `POST /campaigns` creates a draft: validates the domain, group and source against the lookups, generates the alias, stores the geo countries, and adds the offers with their calculated shares.
 - Port: `create_campaign(...)`, `create_geo_stream(...)` and `create_offers_stream(...)`, taking domain types and returning external ids.
@@ -98,7 +98,8 @@ adrobot/
   - the campaign;
   - the geo stream (redirect to `GEO_REDIRECT_URL`, country `accept` filter);
   - the offers stream (`schema: landings` with no landings, `offers` with shares; the exact `type` / `action_type` taken from the schema).
-- Default name: `CAMPAIGN_NAME_PREFIX` + the next N.
+- Default name: `CAMPAIGN_NAME_PREFIX` + the next N. Alias: the name as a slug + 6 random hex characters (at most 40 characters, `[a-z0-9-]`).
+- Built: `campaigns/create.py` (the draft), `tracker/keitaro/payloads.py` and the adapter's `create_*` methods, `GET /campaigns/defaults` and `POST /campaigns`.
 - Unit tests: the payloads, alias generation and the next N.
 - **First real push** (once Phase 5 is done): the owner creates `test_name_campaign1` in AdRobot and pushes it.
   - Check: did Keitaro store both streams as intended (positions, the country filter, the redirect, the offer shares)? If not, fix the payloads and retry.

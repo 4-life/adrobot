@@ -9,10 +9,19 @@ from collections.abc import Awaitable, Callable
 from types import TracebackType
 from typing import Any, Self
 
+from app.tracker.keitaro import payloads
 from app.tracker.keitaro.client import KeitaroClient, KeitaroError
 from app.tracker.keitaro.layout import detect_layout
 from app.tracker.keitaro.models_overrides import Campaign
-from app.tracker.port import CampaignState, LookupItem, TrackerCampaign, TrackerError
+from app.tracker.port import (
+    CampaignState,
+    LookupItem,
+    NewCampaign,
+    NewGeoStream,
+    NewOffersStream,
+    TrackerCampaign,
+    TrackerError,
+)
 
 STREAM_FETCH_CONCURRENCY = 8
 ACTIVE = "active"
@@ -125,6 +134,25 @@ class KeitaroTracker:
     async def list_sources(self) -> list[LookupItem]:
         sources = await _translated(self._kt.list_sources())
         return _lookup([(s.id, s.name, s.state) for s in sources])
+
+    async def create_campaign(self, campaign: NewCampaign) -> int:
+        created = await _translated(self._kt.create_campaign(payloads.campaign_request(campaign)))
+        return _required_id(created.id, "campaign")
+
+    async def create_geo_stream(self, stream: NewGeoStream) -> int:
+        created = await _translated(self._kt.create_stream(payloads.geo_stream_request(stream)))
+        return _required_id(created.id, "geo stream")
+
+    async def create_offers_stream(self, stream: NewOffersStream) -> int:
+        request = payloads.offers_stream_request(stream)
+        created = await _translated(self._kt.create_stream(request))
+        return _required_id(created.id, "offers stream")
+
+
+def _required_id(value: int | None, what: str) -> int:
+    if value is None:
+        raise TrackerError(502, f"Keitaro created the {what} but returned no id")
+    return value
 
 
 def create(factory: Callable[[], KeitaroClient] = KeitaroClient.from_settings) -> KeitaroTracker:
