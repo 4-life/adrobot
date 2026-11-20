@@ -84,6 +84,17 @@ export type NewCampaignInput = {
   offer_ids: number[];
 };
 
+// The New campaign dialog's data (routes/new-campaign-data.ts).
+export type NewCampaignData =
+  | {
+      ok: true;
+      defaults: CampaignDefaults;
+      domains: LookupItem[];
+      groups: LookupItem[];
+      sources: LookupItem[];
+    }
+  | { ok: false; error: string };
+
 // What every campaign action returns to its form (route action → fetcher.data).
 export type ActionResult =
   | { ok: true; message?: string; mismatch?: string[]; pushResults?: PushItem[] }
