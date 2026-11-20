@@ -51,9 +51,15 @@ export function OfferSearch({
           placeholder="Search offers by name or id"
           value={query}
           disabled={disabled}
+          // Focus stays here after a pick (so the click lands), so typing or clicking again
+          // reopens the list too, not only focusing.
           onFocus={() => setOpen(true)}
+          onClick={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), CLOSE_DELAY_MS)}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setOpen(true);
+          }}
           className="max-w-sm"
         />
         {fetcher.state !== "idle" && <Spinner label="Searching offers" />}
