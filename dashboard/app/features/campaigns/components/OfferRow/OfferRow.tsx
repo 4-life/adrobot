@@ -50,7 +50,6 @@ export function OfferRow({
             Remove
           </Button>
         )}
-        {action.error && <div className="text-xs text-red-300">{action.error}</div>}
       </td>
     </tr>
   );

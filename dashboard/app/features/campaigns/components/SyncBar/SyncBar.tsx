@@ -6,8 +6,6 @@ import { Spinner } from "@/components/shared/Spinner/Spinner";
 
 import { formatTime } from "../../filters";
 import { useCampaignAction } from "../../useCampaignAction";
-import { ActionFeedback } from "../ActionFeedback/ActionFeedback";
-import { PushAllResults } from "../PushAllResults/PushAllResults";
 
 // Header actions: Fetch streams, the pending count, Push all and Cancel all.
 export function SyncBar({
@@ -20,7 +18,6 @@ export function SyncBar({
   newCampaign: ReactNode;
 }) {
   const action = useCampaignAction();
-  const result = action.result;
 
   return (
     <div className="space-y-2">
@@ -60,8 +57,6 @@ export function SyncBar({
           the rest.
         </ConfirmDialog>
       </div>
-      <ActionFeedback result={result} />
-      {result?.ok && result.pushResults && <PushAllResults results={result.pushResults} />}
     </div>
   );
 }

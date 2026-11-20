@@ -1,5 +1,9 @@
+import { useEffect } from "react";
 import { useFetcher } from "react-router";
 
+import { useToast } from "@/components/shared/Toast/Toaster";
+
+import { resultToasts } from "./components/ResultToast/ResultToast";
 import type { ActionResult } from "./types";
 
 export const CAMPAIGN_ACTION_ROUTE = "/campaign-action"; // routes/campaign-action.ts
@@ -7,9 +11,22 @@ export const CAMPAIGN_ACTION_ROUTE = "/campaign-action"; // routes/campaign-acti
 type FieldValue = string | number | boolean | null | (string | number)[];
 
 // Posts one campaign action (an `intent` and its fields) to the campaign-action route, without
-// navigating (every page's loader then reloads); each component gets its own pending state and result.
-export function useCampaignAction() {
+// navigating (every page's loader then reloads); each component gets its own pending state.
+// The result is shown as toasts, unless `toasts: false` (inside a modal dialog, where a toast
+// would be hidden behind it: show `error` there instead).
+export function useCampaignAction({ toasts = true }: { toasts?: boolean } = {}) {
   const fetcher = useFetcher<ActionResult>();
+  const toast = useToast();
+  const result = fetcher.data;
+
+  // Once per result: fetcher.data is a new object after every submission.
+  useEffect(() => {
+    if (toasts && result) {
+      for (const { tone, content } of resultToasts(result)) {
+        toast(tone, content);
+      }
+    }
+  }, [result, toasts, toast]);
 
   const run = (intent: string, fields: Record<string, FieldValue> = {}) => {
     const form = new FormData();
@@ -29,7 +46,6 @@ export function useCampaignAction() {
     void fetcher.submit(form, { method: "post", action: CAMPAIGN_ACTION_ROUTE });
   };
 
-  const result = fetcher.data;
   return {
     run,
     busy: fetcher.state !== "idle",

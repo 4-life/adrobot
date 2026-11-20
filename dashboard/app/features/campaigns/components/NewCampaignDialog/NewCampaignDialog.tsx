@@ -87,7 +87,8 @@ export function NewCampaignDialog() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Form>(EMPTY);
   const data = useFetcher<NewCampaignData>();
-  const action = useCampaignAction();
+  // No toasts: the modal would hide them; its error is shown inside the dialog.
+  const action = useCampaignAction({ toasts: false });
   const submitted = useRef(false);
   const set = (patch: Partial<Form>) => setForm((current) => ({ ...current, ...patch }));
 

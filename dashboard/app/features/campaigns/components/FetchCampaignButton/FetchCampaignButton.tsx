@@ -4,7 +4,6 @@ import { Spinner } from "@/components/shared/Spinner/Spinner";
 import { formatTime } from "../../filters";
 import type { Campaign } from "../../types";
 import { useCampaignAction } from "../../useCampaignAction";
-import { ActionFeedback } from "../ActionFeedback/ActionFeedback";
 
 // Re-reads this one campaign from Keitaro (after a change made there): fast, unlike the full
 // Fetch streams. A pending draft is kept; a change under it shows as a conflict.
@@ -28,7 +27,6 @@ export function FetchCampaignButton({ campaign }: { campaign: Campaign }) {
           Fetch from Keitaro
         </Button>
       </div>
-      <ActionFeedback result={action.result} />
     </div>
   );
 }

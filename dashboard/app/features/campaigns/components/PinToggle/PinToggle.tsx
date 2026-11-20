@@ -34,7 +34,6 @@ export function PinToggle({ streamId, offer }: { streamId: number; offer: Offer 
       >
         <PinIcon filled={pinned} />
       </button>
-      {action.error && <span className="ml-1.5 text-xs text-red-300">{action.error}</span>}
     </>
   );
 }

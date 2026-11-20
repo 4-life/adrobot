@@ -179,9 +179,9 @@ React Router SSR. Only the dashboard server talks to the API: route loaders and 
 | `app/routes/home.tsx` | The campaigns **table** (`/`): filters (the search starts at `CAMPAIGN_NAME_PREFIX`), and one row per campaign whose name opens its page. The loader reads the campaigns; the header holds the sync bar and New campaign |
 | `app/routes/campaign.tsx` | **One campaign** (`/campaigns/:id`), opened by id: status, Push / Cancel, conflict, offers, Removed, the geo line. An unknown id is a 404 page with a link back |
 | `app/routes/campaign-action.ts`, `offers-search.ts`, `new-campaign-data.ts` | Resource routes for fetchers: every campaign form posts to `campaign-action` (then each page's loader reloads); offer search; the New campaign dialog's defaults and selects |
-| `app/components/shared/` | Feature-agnostic UI: `Header`, `Footer`, `Button`, `Badge`, `Dialog` (native `<dialog>`), `ConfirmDialog` (never `window.confirm`), `Notice`, `Spinner`, `PinIcon`, `Field` / `TextInput` / `Select` |
-| `app/features/campaigns/` | The campaigns feature. `api.server.ts` has the API calls, `actions.server.ts` the intent dispatcher, `types.ts` the API shapes, and `filters.ts` / `countries.ts` hold pure helpers. `useCampaignAction.ts` posts one action per component, with its own pending state and result |
-| `app/features/campaigns/components/` | `CampaignsView`, `CampaignFilters`, `CampaignsTable`, `CampaignDetails`, `CampaignBadges`, `CampaignActions`, `ConflictBanner`, `FetchCampaignButton`, `GeoRow`, `OffersTable`, `OfferRow`, `ShareCell`, `ChangeBadge`, `PinToggle`, `RemovedOffers`, `OfferSearch`, `AddOffer`, `ActionFeedback`, `SyncBar`, `PushAllResults`, `NewCampaignDialog` |
+| `app/components/shared/` | Feature-agnostic UI: `Header`, `Footer`, `Button`, `Badge`, `Dialog` (native `<dialog>`), `ConfirmDialog` (never `window.confirm`), `Notice`, `Spinner`, `Toaster` / `useToast` (notifications), `PinIcon`, `Field` / `TextInput` / `Select` |
+| `app/features/campaigns/` | The campaigns feature. `api.server.ts` has the API calls, `actions.server.ts` the intent dispatcher, `types.ts` the API shapes, and `filters.ts` / `countries.ts` hold pure helpers. `useCampaignAction.ts` posts one action per component, with its own pending state, and shows its result as toasts |
+| `app/features/campaigns/components/` | `CampaignsView`, `CampaignFilters`, `CampaignsTable`, `CampaignDetails`, `CampaignBadges`, `CampaignActions`, `ConflictBanner`, `FetchCampaignButton`, `GeoRow`, `OffersTable`, `OfferRow`, `ShareCell`, `ChangeBadge`, `PinToggle`, `RemovedOffers`, `OfferSearch`, `AddOffer`, `ResultToast`, `SyncBar`, `PushAllResults`, `NewCampaignDialog` |
 
 **Page**:
 
@@ -196,6 +196,7 @@ React Router SSR. Only the dashboard server talks to the API: route loaders and 
   - **Offers stream**: a table with offer, share % with a pin icon after it (pins the offer at its current share; click again to unpin), change marker and remove button, plus **Add offer** (search) and a collapsible **Removed** list with **Bring back**.
   - **Search**: starts filled with `CAMPAIGN_NAME_PREFIX`, so our campaigns show by default. Clear it to see every campaign on the tracker. It matches the name or the alias.
   - Filters by group, domain and source, a name search, and "Pending only".
+- **Notifications are toasts** (bottom right): an action's message in green (4 s), what the tracker stored differently in amber (10 s), errors in red until closed. Push all lists each campaign's outcome in its toast. Only the New campaign dialog shows its error inside it, because a modal would hide a toast.
 - Confirmations (Push all, Cancel, Keep my draft) use a Dialog, never `window.confirm`.
 
 ## API

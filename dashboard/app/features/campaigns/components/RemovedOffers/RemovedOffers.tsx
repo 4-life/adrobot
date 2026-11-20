@@ -30,7 +30,6 @@ function RemovedRow({ streamId, offer, readOnly }: { streamId: number; offer: Of
           Bring back
         </Button>
       )}
-      {action.error && <span className="text-xs text-red-300">{action.error}</span>}
     </li>
   );
 }

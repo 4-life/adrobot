@@ -1,6 +1,5 @@
 import type { Stream } from "../../types";
 import { useCampaignAction } from "../../useCampaignAction";
-import { ActionFeedback } from "../ActionFeedback/ActionFeedback";
 import { OfferSearch } from "../OfferSearch/OfferSearch";
 
 // Adds a tracker offer to the offers stream's draft; the shares are rebalanced by the API.
@@ -16,7 +15,6 @@ export function AddOffer({ stream }: { stream: Stream }) {
         disabled={action.busy}
         onPick={(offer) => action.run("add-offer", { streamId: stream.id, offerId: offer.id })}
       />
-      <ActionFeedback result={action.result} />
     </div>
   );
 }

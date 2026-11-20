@@ -5,16 +5,12 @@ import { Spinner } from "@/components/shared/Spinner/Spinner";
 import type { Campaign } from "../../types";
 import { useCampaignAction } from "../../useCampaignAction";
 import { useLeaveWhenDeleted } from "../../useLeaveWhenDeleted";
-import { ActionFeedback } from "../ActionFeedback/ActionFeedback";
 
 // Push to KT / Cancel changes for one campaign.
 export function CampaignActions({ campaign, blocked }: { campaign: Campaign; blocked: boolean }) {
   const action = useCampaignAction();
   useLeaveWhenDeleted(action.result);
   const canAct = campaign.pending && !action.busy;
-  // "Pushed to the tracker" / "Changes cancelled" is stale once there are new unpushed
-  // changes; errors stay until the next action.
-  const outdated = Boolean(action.result?.ok) && campaign.pending && !action.busy;
 
   return (
     <div className="space-y-2">
@@ -41,7 +37,6 @@ export function CampaignActions({ campaign, blocked }: { campaign: Campaign; blo
           Push to KT
         </Button>
       </div>
-      <ActionFeedback result={outdated ? undefined : action.result} />
     </div>
   );
 }
