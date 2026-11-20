@@ -9,13 +9,11 @@ from typing import Any
 from app.tracker.keitaro import models
 
 Domain = models.Domain
-FilterStreamRequest = models.FilterStreamRequest
 Group = models.Group
 Offer = models.Offer
 OfferStream = models.OfferStream
 OfferStreamRequest = models.OfferStreamRequest
 Source = models.Source
-StreamObject = models.StreamObject
 
 
 class Campaign(models.Campaign):
@@ -43,3 +41,13 @@ class Filter(models.Filter):
 
 class Stream(models.Stream):
     filters: list[Filter] | None = None  # type: ignore[assignment]
+
+
+class FilterStreamRequest(models.FilterStreamRequest):
+    """The schema says a list of strings; a pushed-back filter may carry another shape."""
+
+    payload: Any = None
+
+
+class StreamObject(models.StreamObject):
+    filters: list[FilterStreamRequest] | None = None  # type: ignore[assignment]

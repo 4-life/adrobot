@@ -121,6 +121,20 @@ class TrackerProvider(Protocol):
 
     async def create_offers_stream(self, stream: NewOffersStream) -> int: ...
 
+    # Pushing an existing campaign.
+    async def get_streams(self, campaign_id: int) -> list[TrackerStream] | None:
+        """The campaign's [geo, offers] streams as the tracker has them now; None when they
+        aren't laid out that way any more."""
+        ...
+
+    async def push_offers(self, stream: TrackerStream, offers: list[OfferShare]) -> None:
+        """Make `offers` the offers stream's offers (others on it are dropped)."""
+        ...
+
+    async def push_geo(self, stream: TrackerStream, countries: list[str]) -> None:
+        """Make `countries` the geo stream's countries, leaving the rest of the stream as is."""
+        ...
+
     async def aclose(self) -> None: ...
 
     async def __aenter__(self) -> Self: ...

@@ -106,7 +106,7 @@ adrobot/
   - Record `GET /campaigns/{id}/streams` as `streams.json`.
   - Edit its offers in AdRobot and push again, to confirm that `PUT /streams/{id}` replaces the offers array rather than merging it.
 
-## Phase 5: Push
+## Phase 5: Push — done
 
 - Port: `get_stream(external_id, role)`, `push_offers(stream, offers)` and `push_geo(stream, countries)`. They return the stream as the tracker stored it.
 - **Existing campaign**: for each changed stream (offers and/or geo), re-read it (`409` + conflict on a mismatch), validate (`422`), push, then set synced = draft = the result.
@@ -114,6 +114,8 @@ adrobot/
 - The Keitaro adapter's payloads keep whatever else the stream carries, from `raw`. They change only `offers` on the offers stream, and only the country filter's `payload` on the geo stream.
 - `POST /sync/push-all` pushes campaign by campaign and reports a result for each one. A failure doesn't stop the rest.
 - `POST /campaigns/{id}/resolve`, plus `sync_log` entries for every step.
+- Built: `campaigns/push.py` (port only, tested against an in-memory fake tracker), the Keitaro adapter's `get_streams` / `push_offers` / `push_geo` and update payloads, `POST /campaigns/{id}/push`, `POST /sync/push-all`, `POST /campaigns/{id}/resolve`, and tracker errors → `502`.
+- **Now possible: the first real push** (Phase 4). Check that its `mismatch` is empty, and that a second push after removing an offer drops it (if Keitaro merged instead, `mismatch` says so).
 
 ## Phase 6: Dashboard
 

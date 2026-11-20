@@ -7,8 +7,13 @@ The stream settings below follow the schema; the first real push confirms them a
 Keitaro stores (PLAN, Phase 4).
 """
 
+from typing import Any
+
+from app.tracker.keitaro.layout import COUNTRY_FILTER
 from app.tracker.keitaro.models_overrides import CampaignRequest, StreamObject
-from app.tracker.port import NewCampaign, NewGeoStream, NewOffersStream
+from app.tracker.port import NewCampaign, NewGeoStream, NewOffersStream, OfferShare
+
+FILTER_FIELDS = ("id", "name", "mode", "payload")
 
 GEO_STREAM_NAME = "Geo"
 OFFERS_STREAM_NAME = "Offers"
@@ -57,8 +62,29 @@ def offers_stream_request(stream: NewOffersStream) -> StreamObject:
             "state": "active",
             "schema": "landings",
             "action_type": "http",
-            "offers": [
-                {"offer_id": o.offer_id, "share": o.share, "state": "active"} for o in stream.offers
-            ],
+            "offers": _offers(stream.offers),
         }
     )
+
+
+def _offers(offers: list[OfferShare]) -> list[dict[str, object]]:
+    return [{"offer_id": o.offer_id, "share": o.share, "state": "active"} for o in offers]
+
+
+def offers_update_request(offers: list[OfferShare]) -> StreamObject:
+    """PUT /streams/{id}: only `offers`, so nothing else on the stream changes."""
+    return StreamObject.model_validate({"offers": _offers(offers)})
+
+
+def geo_update_request(raw: dict[str, Any], countries: list[str]) -> StreamObject:
+    """PUT /streams/{id}: only `filters`. Every filter the stream has (from `raw`) is kept
+    with its id; the country filter gets `countries` (added if the stream has none)."""
+    filters: list[dict[str, Any]] = []
+    for item in raw.get("filters") or []:
+        kept = {k: item[k] for k in FILTER_FIELDS if k in item}
+        if item.get("name") == COUNTRY_FILTER:
+            kept["payload"] = countries
+        filters.append(kept)
+    if not any(f.get("name") == COUNTRY_FILTER for f in filters):
+        filters.append({"name": COUNTRY_FILTER, "mode": "accept", "payload": countries})
+    return StreamObject.model_validate({"filters": filters})

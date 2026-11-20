@@ -106,7 +106,8 @@ A new campaign is always pending.
 - Works per campaign, or **Push all** for every pending campaign.
 - For an existing campaign, it first re-reads each changed stream (`GET /streams/{id}`). If a stream differs from its synced state, the push is refused with `409` and the campaign is flagged Conflict.
 - Otherwise it sends `PUT /streams/{id}` for each changed stream: the offers array for the offers stream, the country filter for the geo stream.
-- It then re-reads the streams and sets synced and draft both to what Keitaro returned.
+- It then re-reads the streams and sets synced and draft both to what Keitaro returned. Anything Keitaro stored differently from what was sent is reported as `mismatch` (and logged), and the draft follows Keitaro.
+- A push updates only what AdRobot manages: the offers stream's `offers`, and the geo stream's country filter (its other filters are sent back unchanged, with their ids).
 - An empty geo country list can't be pushed (`422`).
 
 **Cancel changes**
@@ -195,9 +196,10 @@ There's no auth: the MVP runs only on the local machine (see [Security](#securit
 | `PATCH /streams/{id}/offers/{offer_id}` | `{pinned, pinned_share}` (1-100). `offer_id` is the tracker's offer id; `{id}` is AdRobot's stream id |
 | `DELETE /streams/{id}/offers/{offer_id}` | remove the offer in the draft |
 | `POST /streams/{id}/offers/{offer_id}/restore` | Bring back |
-| `POST /campaigns/{id}/push` · `POST /sync/push-all` | Push to KT (creates new campaigns). `409` on Conflict, `422` on an invalid draft, `502` with Keitaro's error message. |
+| `POST /campaigns/{id}/push` | Push to KT → `{pushed, mismatch, campaign}`. `pushed: false` when nothing was pending; `mismatch` lists where the tracker stored something other than what was sent. `409` on Conflict (the tracker changed since the last fetch: the campaign is flagged and its synced state updated), `422` on an invalid draft, `502` with the tracker's error (a new campaign resumes from the failed step on the next push) |
+| `POST /sync/push-all` | every pending campaign, one by one → `{results: [{campaign_id, name, ok, error, mismatch}]}`; a failure doesn't stop the rest |
 | `POST /campaigns/{id}/cancel` · `POST /sync/cancel-all` | Cancel changes: `{deleted, campaign}` (a new draft campaign is deleted) / `{cancelled, deleted}` |
-| `POST /campaigns/{id}/resolve` | `{keep_draft: bool}`: resolve a Conflict |
+| `POST /campaigns/{id}/resolve` | `{keep_draft}`: `true` clears Conflict (the next push goes over the tracker's version), `false` cancels the draft → `{deleted, campaign}`. `409` without a conflict |
 
 ## Postgres
 

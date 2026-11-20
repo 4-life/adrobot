@@ -175,3 +175,25 @@ def campaign_out(campaign: Campaign) -> CampaignOut:
         fetched_at=campaign.fetched_at,
         streams=[stream_out(s) for s in campaign.streams],
     )
+
+
+class PushOut(BaseModel):
+    pushed: bool  # False: nothing was pending
+    mismatch: list[str]  # where the tracker stored something other than what was sent
+    campaign: CampaignOut
+
+
+class PushItemOut(BaseModel):
+    campaign_id: int
+    name: str
+    ok: bool
+    error: str | None
+    mismatch: list[str]
+
+
+class PushAllOut(BaseModel):
+    results: list[PushItemOut]
+
+
+class ResolveIn(BaseModel):
+    keep_draft: bool  # True: push the draft over the tracker's version; False: cancel it

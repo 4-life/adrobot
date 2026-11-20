@@ -19,8 +19,10 @@ from app.tracker.port import (
     NewCampaign,
     NewGeoStream,
     NewOffersStream,
+    OfferShare,
     TrackerCampaign,
     TrackerError,
+    TrackerStream,
 )
 
 STREAM_FETCH_CONCURRENCY = 8
@@ -113,11 +115,29 @@ class KeitaroTracker:
 
         async def one(campaign_id: int) -> tuple[int, list[dict[str, Any]]]:
             async with limit:
-                streams = await self._kt.list_streams(campaign_id)
-            raws = [s.model_dump(mode="json", by_alias=True, exclude_unset=True) for s in streams]
-            return campaign_id, raws
+                return campaign_id, await self._raw_streams(campaign_id)
 
         return dict(await asyncio.gather(*(one(i) for i in campaign_ids)))
+
+    async def _raw_streams(self, campaign_id: int) -> list[dict[str, Any]]:
+        streams = await self._kt.list_streams(campaign_id)
+        return [s.model_dump(mode="json", by_alias=True, exclude_unset=True) for s in streams]
+
+    async def get_streams(self, campaign_id: int) -> list[TrackerStream] | None:
+        return await _translated(self._get_streams(campaign_id))
+
+    async def _get_streams(self, campaign_id: int) -> list[TrackerStream] | None:
+        raws, offers = await asyncio.gather(self._raw_streams(campaign_id), self._kt.list_offers())
+        names = {o.id: o.name for o in offers if o.id is not None and o.name}
+        return detect_layout(raws, names)
+
+    async def push_offers(self, stream: TrackerStream, offers: list[OfferShare]) -> None:
+        request = payloads.offers_update_request(offers)
+        await _translated(self._kt.update_stream(stream.external_id, request))
+
+    async def push_geo(self, stream: TrackerStream, countries: list[str]) -> None:
+        request = payloads.geo_update_request(stream.raw, countries)
+        await _translated(self._kt.update_stream(stream.external_id, request))
 
     async def list_offers(self) -> list[LookupItem]:
         offers = await _translated(self._kt.list_offers())
