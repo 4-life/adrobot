@@ -103,10 +103,11 @@ class TrackerError(Exception):
 
 
 class TrackerProvider(Protocol):
-    async def fetch_campaigns(self, streams_prefix: str = "") -> list[TrackerCampaign]:
+    async def fetch_campaigns(self, streams_prefix: str | None = "") -> list[TrackerCampaign]:
         """Every campaign (offer and source names resolved). Streams are read only for those
-        whose name starts with `streams_prefix` ("": all); the rest have `streams_fetched`
-        False. Reading streams is one request per campaign: on a shared tracker, the slow part.
+        whose name starts with `streams_prefix` ("": all, None: none); the rest have
+        `streams_fetched` False. Reading streams is one request per campaign: on a shared
+        tracker, the slow part.
         """
         ...
 

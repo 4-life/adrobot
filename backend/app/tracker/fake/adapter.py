@@ -25,6 +25,7 @@ from app.tracker.port import (
 )
 
 SAMPLE_OFFERS = 20
+SAMPLE_PREFIX = "sample_campaign"  # the seed campaign's name without CAMPAIGN_NAME_PREFIX
 ARCHIVED_OFFERS = {18, 19, 20}  # sample offers 18-20 are archived: listed, not usable
 
 
@@ -80,7 +81,7 @@ def _seeded(prefix: str) -> _State:
     state.campaigns = {
         1001: _Campaign(
             id=1001,
-            name=f"{prefix}1",
+            name=f"{prefix or SAMPLE_PREFIX}1",
             alias="sample-one",
             state="active",
             domain_id=31,
@@ -201,9 +202,11 @@ class InMemoryTracker:
             streams_fetched=with_streams,
         )
 
-    async def fetch_campaigns(self, streams_prefix: str = "") -> list[TrackerCampaign]:
+    async def fetch_campaigns(self, streams_prefix: str | None = "") -> list[TrackerCampaign]:
         return [
-            self._campaign(c, with_streams=c.name.startswith(streams_prefix))
+            self._campaign(
+                c, with_streams=streams_prefix is not None and c.name.startswith(streams_prefix)
+            )
             for c in self._s.campaigns.values()
         ]
 

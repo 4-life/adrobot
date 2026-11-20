@@ -43,7 +43,7 @@ The backend follows the **Dependency Inversion Principle** and **Hexagonal Archi
 
 | Field | Keitaro | Source |
 |---|---|---|
-| Name | `name` | prefilled as `CAMPAIGN_NAME_PREFIX` + N (`test_name_campaign1`, `…2`), where N is 1 + the highest N among existing campaigns and drafts; can be edited |
+| Name | `name` | with `CAMPAIGN_NAME_PREFIX` (MVP): prefilled as prefix + N (`test_name_campaign1`, `…2`), N = 1 + the highest N among existing campaigns and drafts; without it (production): typed, required |
 | Alias | `alias` (required by Keitaro, used in the URL `https://<domain>/<alias>`) | generated from the name plus a random suffix; can be edited |
 | Geo | the geo stream's `country` filter | country codes, `AU` by default |
 | Domain | `domain_id` | `GET /domains` |
@@ -96,7 +96,7 @@ A campaign is **pending** when any draft differs from its synced state. A pendin
 A new campaign is always pending.
 
 **Fetch streams**
-- Reads all campaigns, plus the offer and source names, but **streams only for ours** (name starts with `CAMPAIGN_NAME_PREFIX`, 8 at a time). Reading streams takes one request per campaign, which is what made a full fetch on a shared tracker slow. Domain and group names come with each campaign.
+- Reads all campaigns, plus the offer and source names. Streams are read only for campaigns named with `CAMPAIGN_NAME_PREFIX` (MVP), 8 at a time; without the prefix (production) none are. Reading streams takes one request per campaign, which is what made a full fetch on a shared tracker slow. Domain and group names come with each campaign.
 - Other campaigns keep their last known streams. Their page reads them with **Fetch from Keitaro**, automatically when it opens and they were never read.
 - **Layout**: exactly two live streams. The first has a `country` filter and no offers (the geo stream), and the second isn't a plain redirect (the offers stream). Disabled offers count as removed. Any other campaign is shown read-only as **Unsupported layout**.
 - An offer that is new in Keitaro is appended to the draft too, even when the draft has pending changes.
@@ -248,7 +248,7 @@ Everything is set in `.env`. `.env.example` lists every variable.
 | `KEITARO_API_KEY` | an Admin API key created in Keitaro (required) |
 | `GEO_REDIRECT_URL` | where the geo stream sends visitors (`https://google.com`) |
 | `DEFAULT_GEO` | the default for the create form's Geo field (`AU`) |
-| `CAMPAIGN_NAME_PREFIX` | the prefix of new campaign names, and the campaigns table's default search (`test_name_campaign`) |
+| `CAMPAIGN_NAME_PREFIX` | **MVP only, empty in production.** Set: new campaigns are named `prefix` + N, the table's search starts with it, and Fetch streams reads streams for those campaigns. Empty: you type the name, the search starts empty, and Fetch streams reads the campaign list only (`test_name_campaign` in `.env.example`) |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | the local database |
 | `API_PORT` / `DASHBOARD_PORT` | `8000` / `3000` |
 

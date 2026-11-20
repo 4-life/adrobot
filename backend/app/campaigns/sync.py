@@ -24,10 +24,10 @@ class FetchResult:
 
 
 async def fetch_all(
-    session: AsyncSession, tracker: TrackerProvider, streams_prefix: str = ""
+    session: AsyncSession, tracker: TrackerProvider, streams_prefix: str | None = ""
 ) -> FetchResult:
-    """Every campaign; streams only for those whose name starts with `streams_prefix` ("": all).
-    The others keep their last known streams: their page's Fetch reads them."""
+    """Every campaign; streams only for those whose name starts with `streams_prefix` ("": all,
+    None: none). The others keep their last known streams: their page's Fetch reads them."""
     now = datetime.now(UTC)
     tracked_campaigns = await tracker.fetch_campaigns(streams_prefix)
 

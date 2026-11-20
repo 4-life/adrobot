@@ -30,8 +30,9 @@ Tracker = Annotated[TrackerProvider, Depends(get_tracker)]
 
 @router.post("/sync/fetch")
 async def fetch(session: Session, tracker: Tracker) -> FetchOut:
-    # Streams only for ours (the slow part on a shared tracker); the rest on their page.
-    result = await fetch_all(session, tracker, settings.campaign_name_prefix)
+    # Streams (the slow part on a shared tracker) only for CAMPAIGN_NAME_PREFIX's campaigns, or
+    # none without it: each campaign reads its streams on its page.
+    result = await fetch_all(session, tracker, settings.campaign_name_prefix or None)
     return FetchOut(
         fetched_at=result.fetched_at, campaigns=result.campaigns, conflicts=result.conflicts
     )
@@ -47,7 +48,10 @@ async def list_campaigns(session: Session) -> list[CampaignOut]:
 
 
 async def _next_name(session: AsyncSession) -> str:
+    """The next `prefix` + N; "" without CAMPAIGN_NAME_PREFIX (the name is then typed)."""
     prefix = settings.campaign_name_prefix
+    if not prefix:
+        return ""
     names = await session.scalars(
         select(Campaign.name).where(Campaign.name.startswith(prefix, autoescape=True))
     )
@@ -59,7 +63,7 @@ async def campaign_defaults(session: Session) -> CampaignDefaultsOut:
     name = await _next_name(session)
     return CampaignDefaultsOut(
         name=name,
-        alias=make_alias(name),
+        alias=make_alias(name) if name else "",
         countries=[settings.default_geo],
         redirect_url=settings.geo_redirect_url,
         name_prefix=settings.campaign_name_prefix,

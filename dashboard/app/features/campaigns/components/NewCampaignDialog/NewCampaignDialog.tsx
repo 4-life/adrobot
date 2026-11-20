@@ -136,7 +136,8 @@ export function NewCampaignDialog() {
   };
 
   const lists = data.data?.ok ? data.data : null;
-  const canCreate = Boolean(form.domainId) && form.offers.length > 0 && !action.busy;
+  const canCreate =
+    Boolean(form.name.trim()) && Boolean(form.domainId) && form.offers.length > 0 && !action.busy;
 
   return (
     <>
@@ -164,9 +165,14 @@ export function NewCampaignDialog() {
             }}
           >
             <Field label="Name">
-              <TextInput value={form.name} onChange={(event) => set({ name: event.target.value })} />
+              <TextInput
+                required
+                placeholder="Campaign name"
+                value={form.name}
+                onChange={(event) => set({ name: event.target.value })}
+              />
             </Field>
-            <Field label="Alias" hint="In the campaign URL: https://<domain>/<alias>">
+            <Field label="Alias" hint="In the campaign URL: https://<domain>/<alias>. Empty: made from the name">
               <TextInput value={form.alias} onChange={(event) => set({ alias: event.target.value })} />
             </Field>
             <Field label="Geo" hint={`Visitors from these countries go to ${lists.defaults.redirect_url}`}>

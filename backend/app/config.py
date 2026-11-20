@@ -20,7 +20,10 @@ class Settings(BaseSettings):
     # Campaign defaults (docs/DESIGN.md: Creating a Campaign).
     geo_redirect_url: str = "https://google.com"
     default_geo: str = "AU"
-    campaign_name_prefix: str = "test_name_campaign"
+    # MVP only (empty in production): the default name of new campaigns (prefix + N), the
+    # campaigns table's default search, and whose streams Fetch streams reads. Empty: no
+    # default name, no default search, and Fetch streams reads the campaign list only.
+    campaign_name_prefix: str = ""
 
     postgres_user: str
     postgres_password: str

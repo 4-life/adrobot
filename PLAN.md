@@ -152,6 +152,6 @@ adrobot/
 1. **Geo**: the geo stream's countries are set per campaign at creation (`AU` by default). The dashboard shows the geo stream as a small read-only line at the bottom of each card; it isn't edited there.
 2. **Campaign fields** (name, alias, domain, group, source) are set only at creation.
 3. **Offers stream** has no country filter for now.
-4. **Scope**: AdRobot manages every campaign on the (shared) tracker. The campaigns table's search starts at `CAMPAIGN_NAME_PREFIX`, so ours show by default.
+4. **Scope**: AdRobot manages every campaign on the (shared) tracker. There's no "ours" in production: `CAMPAIGN_NAME_PREFIX` is MVP-only (default name, default search, streams on Fetch). Empty, every campaign is treated the same, and each one's streams are read on its page.
 5. **MVP**: local only, no auth, no deploy, no Redis (the tracker lists are cached in the `api`'s memory).
 6. **Architecture**: DIP and Hexagonal (Ports and Adapters) for every external service. The core depends on ports it owns, and vendors live in adapter packages. See [DESIGN: Architecture](docs/DESIGN.md#architecture-ports-and-adapters).

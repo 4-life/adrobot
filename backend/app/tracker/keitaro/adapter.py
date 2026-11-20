@@ -115,10 +115,10 @@ class KeitaroTracker:
     async def aclose(self) -> None:
         await self._kt.aclose()
 
-    async def fetch_campaigns(self, streams_prefix: str = "") -> list[TrackerCampaign]:
+    async def fetch_campaigns(self, streams_prefix: str | None = "") -> list[TrackerCampaign]:
         return await _translated(self._fetch_campaigns(streams_prefix))
 
-    async def _fetch_campaigns(self, streams_prefix: str) -> list[TrackerCampaign]:
+    async def _fetch_campaigns(self, streams_prefix: str | None) -> list[TrackerCampaign]:
         campaigns, offers, sources = await asyncio.gather(
             self._kt.list_campaigns(), self._kt.list_offers(), self._kt.list_sources()
         )
@@ -126,7 +126,7 @@ class KeitaroTracker:
         source_names = {s.id: s.name for s in sources if s.id is not None and s.name}
 
         def wanted(c: Campaign) -> bool:
-            return (c.name or "").startswith(streams_prefix)
+            return streams_prefix is not None and (c.name or "").startswith(streams_prefix)
 
         live = [
             c.id
