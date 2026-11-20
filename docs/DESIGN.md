@@ -187,7 +187,7 @@ There's no auth: the MVP runs only on the local machine (see [Security](#securit
 | `GET /health` | health check (also checks Postgres) |
 | *errors* | `404` unknown campaign / stream / offer, `409` read-only campaign (archived, unsupported layout) or an edit that doesn't apply (already removed, …), `422` invalid input, `502` tracker error; body `{detail}` |
 | `POST /sync/fetch` | Fetch streams. Returns the campaigns flagged Conflict. |
-| `GET /campaigns?scope=ours\|all` | campaigns (`ours` by default) with their streams, draft offers, removed offers, pending/conflict/new/archived flags; per offer its `change` (`added` / `removed` / `share`), per stream `geo_added` / `geo_removed` and `errors` (why the draft can't be pushed). Every edit endpoint returns the campaign in this shape |
+| `GET /campaigns?scope=ours\|all` | campaigns (`ours` by default; each carries `ours`) with their streams, draft offers, removed offers, pending/conflict/new/archived flags; per offer its `change` (`added` / `removed` / `share`), per stream `geo_added` / `geo_removed` and `errors` (why the draft can't be pushed). Every edit endpoint returns the campaign in this shape |
 | `GET /campaigns/defaults` | prefills the New campaign form: the next name, a generated alias, `[DEFAULT_GEO]`, the redirect URL |
 | `POST /campaigns` | `{name?, alias?, countries?, domain_id, group_id?, traffic_source_id?, offer_ids[]}` → `201` with a new **draft** campaign (New, pending). Blank name/alias/countries use the defaults. Domain, group, source and offers must be active in the tracker (`422`); a duplicate alias is `409` |
 | `GET /tracker/offers?q=` · `GET /tracker/domains` · `GET /tracker/groups` · `GET /tracker/sources` | tracker lookups (cached for 60 s) |

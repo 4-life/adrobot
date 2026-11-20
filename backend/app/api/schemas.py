@@ -10,6 +10,7 @@ from app.campaigns.pending import (
     offer_change,
     stream_pending,
 )
+from app.config import settings
 from app.models.campaign import ARCHIVED, Campaign, Stream, StreamOffer
 
 
@@ -57,6 +58,7 @@ class CampaignOut(BaseModel):
     traffic_source_name: str | None
     state: str
     archived: bool
+    ours: bool  # the name starts with CAMPAIGN_NAME_PREFIX
     layout_supported: bool
     conflict: bool
     is_new: bool
@@ -168,6 +170,7 @@ def campaign_out(campaign: Campaign) -> CampaignOut:
         traffic_source_name=campaign.traffic_source_name,
         state=campaign.state,
         archived=campaign.state == ARCHIVED,
+        ours=campaign.name.startswith(settings.campaign_name_prefix),
         layout_supported=campaign.layout_supported,
         conflict=campaign.conflict,
         is_new=campaign.is_new,
