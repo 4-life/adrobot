@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
 
+from sqlalchemy import inspect
+
 from app.campaigns.merge import merge_streams
 from app.campaigns.pending import campaign_pending
 from app.models.campaign import Campaign, Stream, StreamOffer
@@ -152,3 +154,11 @@ def test_removed_offer_reappearing_in_tracker_comes_back() -> None:
 
     back = offer(campaign, 602)
     assert (back.draft_active, back.removed_by) == (True, None)
+
+
+def test_streams_created_by_a_fetch_have_their_offers_loaded() -> None:
+    """Async SQLAlchemy can't lazy-load: a collection never set would fail after the commit."""
+    campaign = synced(new_campaign())
+
+    for stream in campaign.streams:
+        assert "offers" not in inspect(stream).unloaded

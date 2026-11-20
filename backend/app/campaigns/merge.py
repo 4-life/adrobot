@@ -103,7 +103,8 @@ def merge_streams(campaign: Campaign, fetched: list[TrackerStream], now: datetim
     for item in fetched:
         stream = by_role.get(item.role)
         if stream is None:
-            stream = Stream(role=item.role, synced_geo=None, draft_geo=None)
+            # offers=[] up front: a collection never set would lazy-load later (async: refused).
+            stream = Stream(role=item.role, synced_geo=None, draft_geo=None, offers=[])
             campaign.streams.append(stream)
         stream.external_id = item.external_id
         stream.position = item.position

@@ -41,9 +41,11 @@ class CampaignRequest(models.CampaignRequest):
 
 
 class Filter(models.Filter):
-    """The schema types `payload` as a string; filters like `country` carry a list."""
+    """The schema types `payload` as a string; filters like `country` carry a list. It types
+    `oid` as a string; Keitaro sends a number."""
 
     payload: Any = None
+    oid: int | str | None = None  # type: ignore[assignment]
 
 
 class Stream(models.Stream):

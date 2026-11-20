@@ -65,8 +65,15 @@ def new_draft(
     if len({o.offer_id for o in offers}) != len(offers):
         raise DraftError("invalid", "An offer is listed twice")
 
+    # Every collection is set up front: after the commit, reading one the code never touched
+    # would lazy-load it, which async SQLAlchemy refuses (MissingGreenlet).
     geo = Stream(
-        role=GEO, position=1, synced_geo=None, draft_geo=normalize_countries(countries), raw=None
+        role=GEO,
+        position=1,
+        synced_geo=None,
+        draft_geo=normalize_countries(countries),
+        raw=None,
+        offers=[],
     )
     offers_stream = Stream(role=OFFERS, position=2, synced_geo=None, draft_geo=None, raw=None)
     offers_stream.offers = [

@@ -1,4 +1,3 @@
-import { ApiStatus } from "@/components/shared/ApiStatus/ApiStatus";
 import { Footer } from "@/components/shared/Footer/Footer";
 import { Header } from "@/components/shared/Header/Header";
 import { Notice } from "@/components/shared/Notice/Notice";
@@ -9,25 +8,23 @@ import { NewCampaignDialog } from "@/features/campaigns/components/NewCampaignDi
 import { SyncBar } from "@/features/campaigns/components/SyncBar/SyncBar";
 import { lastFetchedAt, pendingCount } from "@/features/campaigns/filters";
 import type { Campaign } from "@/features/campaigns/types";
-import { ApiError, getHealth } from "@/lib/api.server";
+import { ApiError } from "@/lib/api.server";
 
 import type { Route } from "./+types/home";
 
 type PageData = {
-  healthy: boolean;
   campaigns: Campaign[];
   redirectUrl: string;
-  error: string | null;
+  error: string | null; // the API's error (or "unreachable"), shown above the campaigns
 };
 
 export async function loader(): Promise<PageData> {
-  const { healthy } = await getHealth();
   try {
     const [campaigns, defaults] = await Promise.all([listCampaigns(), campaignDefaults()]);
-    return { healthy, campaigns, redirectUrl: defaults.redirect_url, error: null };
+    return { campaigns, redirectUrl: defaults.redirect_url, error: null };
   } catch (error) {
     if (error instanceof ApiError) {
-      return { healthy, campaigns: [], redirectUrl: "", error: error.message };
+      return { campaigns: [], redirectUrl: "", error: error.message };
     }
     throw error;
   }
@@ -39,11 +36,10 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { healthy, campaigns, redirectUrl, error } = loaderData;
+  const { campaigns, redirectUrl, error } = loaderData;
   return (
     <div className="flex min-h-screen flex-col">
       <Header
-        status={<ApiStatus healthy={healthy} />}
         actions={
           <SyncBar
             pending={pendingCount(campaigns)}

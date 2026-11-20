@@ -2,7 +2,6 @@
 // Only route loaders and actions call it; the browser never talks to the API directly.
 const API_URL = process.env.API_URL ?? "http://localhost:8000";
 const DEFAULT_TIMEOUT_MS = 30_000; // push and lookups wait on the tracker
-const HEALTH_TIMEOUT_MS = 5_000;
 
 export class ApiError extends Error {
   constructor(
@@ -55,15 +54,4 @@ async function errorDetail(response: Response): Promise<string> {
     // not JSON: fall through to the status line
   }
   return `${response.status} ${response.statusText}`;
-}
-
-export type Health = { healthy: boolean };
-
-export async function getHealth(): Promise<Health> {
-  try {
-    await api("/health", { timeoutMs: HEALTH_TIMEOUT_MS });
-    return { healthy: true };
-  } catch {
-    return { healthy: false };
-  }
 }

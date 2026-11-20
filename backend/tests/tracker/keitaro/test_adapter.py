@@ -17,7 +17,8 @@ STREAMS = [
         "position": 1,
         "state": "active",
         "schema": "redirect",
-        "filters": [{"name": "country", "mode": "accept", "payload": ["AU"]}],
+        # Keitaro sends `oid` as a number, where the schema says a string.
+        "filters": [{"id": 701, "oid": 9, "name": "country", "mode": "accept", "payload": ["AU"]}],
     },
     {
         "id": 502,

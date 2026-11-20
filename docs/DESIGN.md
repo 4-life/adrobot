@@ -147,6 +147,7 @@ Domains, groups and traffic sources are cached the same way.
     - `Offer.values` and `Offer.country` are lists, but Keitaro sends `""` when they're empty.
     - `group_id` is `integer` in `Campaign` but `string` in `CampaignRequest` / `DomainRequest`.
     - `Filter.payload` is typed as a string, but a `country` filter carries a list.
+    - `Filter.oid` is typed as a string, but Keitaro sends a number.
     - `Report.rows` is typed as an array of strings (not used).
 - **Endpoints used**:
 
@@ -174,9 +175,9 @@ React Router SSR. Only the dashboard server talks to the API: route loaders and 
 
 | Where | What |
 |---|---|
-| `app/routes/home.tsx` | The page. The loader reads the campaigns, the redirect URL and the API health. The single action runs every campaign form (`intent`). It composes the shared Header and Footer with the feature components |
+| `app/routes/home.tsx` | The page. The loader reads the campaigns and the redirect URL (an API error is shown above them). The single action runs every campaign form (`intent`). It composes the shared Header and Footer with the feature components |
 | `app/routes/offers-search.ts`, `new-campaign-data.ts` | Resource routes for fetchers: offer search, and the New campaign dialog's defaults and selects |
-| `app/components/shared/` | Feature-agnostic UI: `Header`, `Footer`, `ApiStatus`, `Button`, `Badge`, `Dialog` (native `<dialog>`), `ConfirmDialog` (never `window.confirm`), `Notice`, `Spinner`, `Field` / `TextInput` / `Select` |
+| `app/components/shared/` | Feature-agnostic UI: `Header`, `Footer`, `Button`, `Badge`, `Dialog` (native `<dialog>`), `ConfirmDialog` (never `window.confirm`), `Notice`, `Spinner`, `Field` / `TextInput` / `Select` |
 | `app/features/campaigns/` | The campaigns feature. `api.server.ts` has the API calls, `actions.server.ts` the intent dispatcher, `types.ts` the API shapes, and `filters.ts` / `countries.ts` hold pure helpers. `useCampaignAction.ts` posts one action per component, with its own pending state and result |
 | `app/features/campaigns/components/` | `CampaignsView`, `CampaignFilters`, `CampaignList`, `CampaignCard`, `CampaignBadges`, `CampaignActions`, `ConflictBanner`, `GeoEditor`, `OffersTable`, `OfferRow`, `ShareCell`, `ChangeBadge`, `PinControl`, `RemovedOffers`, `OfferSearch`, `AddOffer`, `ActionFeedback`, `SyncBar`, `PushAllResults`, `NewCampaignDialog` |
 
@@ -200,7 +201,7 @@ There's no auth: the MVP runs only on the local machine (see [Security](#securit
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /health` | health check (also checks Postgres) |
+| `GET /health` | health check (also checks Postgres), for manual checks; nothing polls it |
 | *errors* | `404` unknown campaign / stream / offer, `409` read-only campaign (archived, unsupported layout) or an edit that doesn't apply (already removed, …), `422` invalid input, `502` tracker error; body `{detail}` |
 | `POST /sync/fetch` | Fetch streams. Returns the campaigns flagged Conflict. |
 | `GET /campaigns?scope=ours\|all` | campaigns (`ours` by default; each carries `ours`) with their streams, draft offers, removed offers, pending/conflict/new/archived flags; per offer its `change` (`added` / `removed` / `share`), per stream `geo_added` / `geo_removed` and `errors` (why the draft can't be pushed). Every edit endpoint returns the campaign in this shape |

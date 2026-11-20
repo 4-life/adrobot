@@ -39,7 +39,7 @@ async def fetch_all(session: AsyncSession, tracker: TrackerProvider) -> FetchRes
         seen.add(tracked.external_id)
         campaign = local.get(tracked.external_id)
         if campaign is None:
-            campaign = Campaign(conflict=False, is_new=False)
+            campaign = Campaign(conflict=False, is_new=False, streams=[])  # no lazy loads later
             session.add(campaign)
         apply_campaign_fields(campaign, tracked, now)
         if tracked.streams is not None and merge_streams(campaign, tracked.streams, now):

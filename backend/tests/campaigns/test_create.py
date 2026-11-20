@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy import inspect
 
 from app.campaigns.create import OfferPick, make_alias, new_draft, next_name, normalize_alias
 from app.campaigns.drafts import DraftError
@@ -84,3 +85,12 @@ def test_invalid_offers_are_refused(offers: list[OfferPick], error: str) -> None
 def test_invalid_geo_is_refused() -> None:
     with pytest.raises(DraftError, match="two-letter"):
         draft([OfferPick(601, "A")], countries=["Australia"])
+
+
+def test_new_draft_has_every_collection_loaded() -> None:
+    """Async SQLAlchemy can't lazy-load: a collection never set would fail after the commit."""
+    campaign = draft([OfferPick(601, "A")])
+
+    assert "streams" not in inspect(campaign).unloaded
+    for stream in campaign.streams:
+        assert "offers" not in inspect(stream).unloaded
