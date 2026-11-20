@@ -34,20 +34,21 @@ function RemovedRow({ streamId, offer, readOnly }: { streamId: number; offer: Of
   );
 }
 
-// Offers removed in AdRobot or in the tracker: kept for this campaign, each can be brought back.
+// Offers removed in AdRobot or in the tracker: kept for this campaign, always listed, each can
+// be brought back.
 export function RemovedOffers({ stream, readOnly }: { stream: Stream; readOnly: boolean }) {
   const removed = stream.offers.filter((o) => !o.draft_active);
   if (removed.length === 0) {
     return null;
   }
   return (
-    <details className="rounded-md border px-3 py-2">
-      <summary className="cursor-pointer text-sm text-muted-foreground">Removed ({removed.length})</summary>
+    <section className="space-y-1 rounded-md border px-3 py-2">
+      <h4 className="text-sm text-muted-foreground">Removed ({removed.length})</h4>
       <ul className="divide-y">
         {removed.map((offer) => (
           <RemovedRow key={offer.id} streamId={stream.id} offer={offer} readOnly={readOnly} />
         ))}
       </ul>
-    </details>
+    </section>
   );
 }
