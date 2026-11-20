@@ -149,7 +149,7 @@ adrobot/
 
 ## Decisions
 
-1. **Geo**: the geo stream's countries are set per campaign at creation (`AU` by default). The dashboard shows the geo stream as a small read-only line at the bottom of each card; it isn't edited there.
+1. **Geo**: the geo stream's countries are set per campaign at creation (typed, at least one). The dashboard shows the geo stream as a small read-only line at the bottom of each card; it isn't edited there.
 2. **Campaign fields** (name, alias, domain, group, source) are set only at creation.
 3. **Offers stream** has no country filter for now.
 4. **Scope**: AdRobot manages every campaign on the (shared) tracker. There's no "ours" in production: `CAMPAIGN_NAME_PREFIX` is MVP-only (default name, default search, streams on Fetch). Empty, every campaign is treated the same, and each one's streams are read on its page.

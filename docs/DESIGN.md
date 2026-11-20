@@ -45,7 +45,7 @@ The backend follows the **Dependency Inversion Principle** and **Hexagonal Archi
 |---|---|---|
 | Name | `name` | with `CAMPAIGN_NAME_PREFIX` (MVP): prefilled as prefix + N (`test_name_campaign1`, `…2`), N = 1 + the highest N among existing campaigns and drafts; without it (production): typed, required |
 | Alias | `alias` (required by Keitaro, used in the URL `https://<domain>/<alias>`) | generated from the name plus a random suffix; can be edited |
-| Geo | the geo stream's `country` filter | country codes, `AU` by default |
+| Geo | the geo stream's `country` filter | country codes, typed (at least one), e.g. `AU, NZ` |
 | Domain | `domain_id` | `GET /domains` |
 | Group | `group_id` | `GET /groups?type=campaigns` |
 | Traffic source | `traffic_source_id` | `GET /traffic_sources` |
@@ -210,7 +210,7 @@ There's no auth: the MVP runs only on the local machine (see [Security](#securit
 | *errors* | `404` unknown campaign / stream / offer, `409` read-only campaign (archived, unsupported layout) or an edit that doesn't apply (already removed, …), `422` invalid input, `502` tracker error; body `{detail}` |
 | `POST /sync/fetch` | Fetch streams. Returns the campaigns flagged Conflict. |
 | `GET /campaigns` | every campaign with their streams, draft offers, removed offers, pending/conflict/new/archived flags; per offer its `change` (`added` / `removed` / `share`), per stream `geo_added` / `geo_removed` and `errors` (why the draft can't be pushed). Every edit endpoint returns the campaign in this shape |
-| `GET /campaigns/defaults` | prefills the New campaign form: the next name, a generated alias, `[DEFAULT_GEO]`, the redirect URL, and `name_prefix` (`CAMPAIGN_NAME_PREFIX`: the table's default search) |
+| `GET /campaigns/defaults` | prefills the New campaign form: the next name, a generated alias, no countries (they're typed), the redirect URL, and `name_prefix` (`CAMPAIGN_NAME_PREFIX`: the table's default search) |
 | `GET /campaigns/{id}` | one campaign, in the same shape as the list; `404` for an unknown id |
 | `POST /campaigns/{id}/fetch` | refreshes this one campaign from the tracker, like a full fetch would (a pending draft is kept; a change under it is a Conflict; gone from the tracker: archived) → the campaign. `422` for a new draft |
 | `POST /campaigns` | `{name?, alias?, countries?, domain_id, group_id?, traffic_source_id?, offer_ids[]}` → `201` with a new **draft** campaign (New, pending). Blank name/alias/countries use the defaults. Domain, group, source and offers must be active in the tracker (`422`); a duplicate alias is `409` |
@@ -247,7 +247,6 @@ Everything is set in `.env`. `.env.example` lists every variable.
 | `KEITARO_URL` | the Keitaro panel's address without a path, e.g. `https://tracker.example.com` (required) |
 | `KEITARO_API_KEY` | an Admin API key created in Keitaro (required) |
 | `GEO_REDIRECT_URL` | where the geo stream sends visitors (`https://google.com`) |
-| `DEFAULT_GEO` | the default for the create form's Geo field (`AU`) |
 | `CAMPAIGN_NAME_PREFIX` | **MVP only, empty in production.** Set: new campaigns are named `prefix` + N, the table's search starts with it, and Fetch streams reads streams for those campaigns. Empty: you type the name, the search starts empty, and Fetch streams reads the campaign list only (`test_name_campaign` in `.env.example`) |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | the local database |
 | `API_PORT` / `DASHBOARD_PORT` | `8000` / `3000` |

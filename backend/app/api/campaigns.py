@@ -64,7 +64,7 @@ async def campaign_defaults(session: Session) -> CampaignDefaultsOut:
     return CampaignDefaultsOut(
         name=name,
         alias=make_alias(name) if name else "",
-        countries=[settings.default_geo],
+        countries=[],
         redirect_url=settings.geo_redirect_url,
         name_prefix=settings.campaign_name_prefix,
     )
@@ -116,7 +116,7 @@ async def create_campaign(
     campaign = new_draft(
         name=name,
         alias=alias,
-        countries=body.countries or [settings.default_geo],
+        countries=body.countries,
         domain_id=domain.id,
         domain_name=domain.name,
         group_id=group.id if group else None,

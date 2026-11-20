@@ -113,7 +113,7 @@ class CampaignDefaultsOut(BaseModel):
 class CreateCampaignIn(BaseModel):
     name: str = ""  # blank: the next CAMPAIGN_NAME_PREFIX + N
     alias: str = ""  # blank: generated from the name
-    countries: list[str] = []  # empty: DEFAULT_GEO
+    countries: list[str]  # the geo stream's countries: at least one
     domain_id: int
     group_id: int | None = None
     traffic_source_id: int | None = None

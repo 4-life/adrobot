@@ -12,7 +12,7 @@ Every campaign has two streams, in this order:
 
 | # | Stream | What it does | In AdRobot |
 |---|---|---|---|
-| 1 | **Geo stream** | Redirects every visitor from the geo countries (Australia by default) to Google | Set at creation, then read-only |
+| 1 | **Geo stream** | Redirects every visitor from the geo countries (e.g. Australia) to Google | Set at creation, then read-only |
 | 2 | **Offers stream** | Splits all other traffic between offers by share (%) | Add, remove, pin, bring back |
 
 1. **Fetch streams** pulls every campaign with its streams and offers from Keitaro.

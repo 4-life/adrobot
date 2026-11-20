@@ -7,7 +7,7 @@ import { Field, Select, TextInput } from "@/components/shared/Field/Field";
 import { Notice } from "@/components/shared/Notice/Notice";
 import { Spinner } from "@/components/shared/Spinner/Spinner";
 
-import { formatCountries } from "../../countries";
+import { formatCountries, parseCountries } from "../../countries";
 import type { LookupItem, NewCampaignData } from "../../types";
 import { useCampaignAction } from "../../useCampaignAction";
 import { OfferSearch } from "../OfferSearch/OfferSearch";
@@ -137,7 +137,11 @@ export function NewCampaignDialog() {
 
   const lists = data.data?.ok ? data.data : null;
   const canCreate =
-    Boolean(form.name.trim()) && Boolean(form.domainId) && form.offers.length > 0 && !action.busy;
+    Boolean(form.name.trim()) &&
+    parseCountries(form.countries).length > 0 &&
+    Boolean(form.domainId) &&
+    form.offers.length > 0 &&
+    !action.busy;
 
   return (
     <>
