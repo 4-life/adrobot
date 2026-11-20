@@ -53,7 +53,8 @@ def routes(request: httpx.Request) -> httpx.Response:
 
 def tracker(handler: Any = routes) -> TrackerProvider:
     transport = httpx.MockTransport(handler)
-    return KeitaroTracker(KeitaroClient("https://kt.test", "key", retry_delay=0, transport=transport))
+    client = KeitaroClient("https://kt.test", "key", retry_delay=0, transport=transport)
+    return KeitaroTracker(client)
 
 
 async def test_fetch_maps_campaigns_streams_and_names() -> None:
