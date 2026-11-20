@@ -51,10 +51,6 @@ async function dispatch(form: FormData): Promise<ActionResult> {
       await campaignsApi.resolveConflict(id(form, "campaignId"), keepDraft);
       return { ok: true, message: keepDraft ? "Draft kept: push it" : "Draft cancelled" };
     }
-    case "set-geo": {
-      await campaignsApi.setGeo(id(form, "streamId"), parseCountries(text(form, "countries")));
-      return { ok: true };
-    }
     case "add-offer": {
       await campaignsApi.addOffer(id(form, "streamId"), id(form, "offerId"));
       return { ok: true };

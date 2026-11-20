@@ -12,11 +12,11 @@ Every campaign has two streams, in this order:
 
 | # | Stream | What it does | In AdRobot |
 |---|---|---|---|
-| 1 | **Geo stream** | Redirects every visitor from the geo countries (Australia by default) to Google | Countries edited |
+| 1 | **Geo stream** | Redirects every visitor from the geo countries (Australia by default) to Google | Set at creation, then read-only |
 | 2 | **Offers stream** | Splits all other traffic between offers by share (%) | Add, remove, pin, bring back |
 
 1. **Fetch streams** pulls every campaign with its streams and offers from Keitaro.
-2. **Create a campaign**, or edit offers and geo countries. Nothing reaches Keitaro yet, and every unsynced change is marked as pending.
+2. **Create a campaign**, or edit offers. Nothing reaches Keitaro yet, and every unsynced change is marked as pending.
 3. **Cancel changes** discards the draft.
 4. **Push to KT** writes the draft to Keitaro.
 

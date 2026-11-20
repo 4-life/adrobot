@@ -189,7 +189,7 @@ React Router SSR. Only the dashboard server talks to the API: route loaders and 
   - The pending count, with **Push all** and **Cancel all**.
 - **Campaigns**: a card per campaign. After every action the loader reloads them.
   - The header shows its name, Keitaro ID (or "New"), alias, domain, group and source, the Not synced / Conflict / Archived badge, **Push to KT** and **Cancel changes**.
-  - **Geo stream**: the countries (multi-select, changes marked pending) and the redirect target.
+  - **Geo stream**: one small read-only line at the bottom of the card: its countries → the redirect target. The countries are set when the campaign is created.
   - **Offers stream**: a table with offer, share %, pin toggle with share input, change marker and remove button, plus **Add offer** (search) and a collapsible **Removed** list with **Bring back**.
   - **Show: Ours / All**, set to **Ours** by default. It's a filter only, and every campaign can be managed under All. The choice is remembered in the browser. A campaign is "ours" when its name starts with `CAMPAIGN_NAME_PREFIX`.
   - Filters by group, domain and source, a name search, and "Pending only".
@@ -208,7 +208,7 @@ There's no auth: the MVP runs only on the local machine (see [Security](#securit
 | `GET /campaigns/defaults` | prefills the New campaign form: the next name, a generated alias, `[DEFAULT_GEO]`, the redirect URL |
 | `POST /campaigns` | `{name?, alias?, countries?, domain_id, group_id?, traffic_source_id?, offer_ids[]}` → `201` with a new **draft** campaign (New, pending). Blank name/alias/countries use the defaults. Domain, group, source and offers must be active in the tracker (`422`); a duplicate alias is `409` |
 | `GET /tracker/offers?q=` · `GET /tracker/domains` · `GET /tracker/groups` · `GET /tracker/sources` | tracker lookups (cached for 60 s) |
-| `PUT /streams/{id}/geo` | `{countries[]}`: set the geo stream's countries in the draft |
+| `PUT /streams/{id}/geo` | `{countries[]}`: set the geo stream's countries in the draft (the dashboard doesn't use it: geo is read-only after creation) |
 | `POST /streams/{id}/offers` | `{offer_id}`: add an offer to the draft. `409` if it's already active or removed (use bring back). |
 | `PATCH /streams/{id}/offers/{offer_id}` | `{pinned, pinned_share}` (1-100). `offer_id` is the tracker's offer id; `{id}` is AdRobot's stream id |
 | `DELETE /streams/{id}/offers/{offer_id}` | remove the offer in the draft |

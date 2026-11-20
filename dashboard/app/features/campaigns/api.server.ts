@@ -37,9 +37,6 @@ export const resolveConflict = (campaignId: number, keepDraft: boolean) =>
     body: { keep_draft: keepDraft },
   });
 
-export const setGeo = (streamId: number, countries: string[]) =>
-  api<Campaign>(`/streams/${streamId}/geo`, { method: "PUT", body: { countries } });
-
 export const addOffer = (streamId: number, offerId: number) =>
   api<Campaign>(`/streams/${streamId}/offers`, { method: "POST", body: { offer_id: offerId } });
 

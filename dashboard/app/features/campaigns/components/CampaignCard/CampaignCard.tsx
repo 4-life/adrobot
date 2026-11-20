@@ -5,7 +5,7 @@ import { AddOffer } from "../AddOffer/AddOffer";
 import { CampaignActions } from "../CampaignActions/CampaignActions";
 import { CampaignBadges } from "../CampaignBadges/CampaignBadges";
 import { ConflictBanner } from "../ConflictBanner/ConflictBanner";
-import { GeoEditor } from "../GeoEditor/GeoEditor";
+import { GeoRow } from "../GeoRow/GeoRow";
 import { OffersTable } from "../OffersTable/OffersTable";
 import { RemovedOffers } from "../RemovedOffers/RemovedOffers";
 
@@ -46,7 +46,6 @@ export function CampaignCard({ campaign, redirectUrl }: { campaign: Campaign; re
         </Notice>
       )}
 
-      {geo && <GeoEditor stream={geo} redirectHint={redirectUrl} readOnly={readOnly} />}
       {offers && (
         <section className="space-y-3">
           <h3 className="text-sm font-medium">Offers stream</h3>
@@ -55,6 +54,7 @@ export function CampaignCard({ campaign, redirectUrl }: { campaign: Campaign; re
           <RemovedOffers stream={offers} readOnly={readOnly} />
         </section>
       )}
+      {geo && <GeoRow stream={geo} redirectUrl={redirectUrl} />}
     </article>
   );
 }

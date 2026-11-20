@@ -126,7 +126,7 @@ adrobot/
 - The New campaign dialog: name, alias, geo (multi-select of countries), domain, group and source selects, and an offers search. An error stays in the dialog.
 - Campaign cards:
   - the header with alias, domain, group, source and badges (New, Not synced, Conflict, Archived, Unsupported layout);
-  - the geo stream's country multi-select, with pending markers;
+  - the geo stream as a small read-only line at the bottom;
   - the offers table with share, pin, remove and change markers;
   - Add offer with a search combobox;
   - the Removed list with Bring back;
@@ -149,7 +149,7 @@ adrobot/
 
 ## Decisions
 
-1. **Geo**: the geo stream's countries are set per campaign (`AU` by default) and stay editable after creation (draft → push).
+1. **Geo**: the geo stream's countries are set per campaign at creation (`AU` by default). The dashboard shows the geo stream as a small read-only line at the bottom of each card; it isn't edited there.
 2. **Campaign fields** (name, alias, domain, group, source) are set only at creation.
 3. **Offers stream** has no country filter for now.
 4. **Scope**: AdRobot manages every campaign on the (shared) tracker. The dashboard shows "ours" by default; see Phase 6.
