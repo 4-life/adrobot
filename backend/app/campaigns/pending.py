@@ -1,13 +1,32 @@
-"""Whether a draft differs from what the tracker has (synced)."""
+"""How a draft differs from what the tracker has (synced): per offer, per geo stream, overall."""
+
+from typing import Literal
 
 from app.models.campaign import Campaign, Stream, StreamOffer
 from app.tracker.port import GEO
 
+OfferChange = Literal["added", "removed", "share"]
+
+
+def offer_change(offer: StreamOffer) -> OfferChange | None:
+    if offer.draft_active and not offer.synced_active:
+        return "added"
+    if offer.synced_active and not offer.draft_active:
+        return "removed"
+    if offer.draft_active and offer.draft_share != offer.synced_share:
+        return "share"
+    return None
+
 
 def offer_pending(offer: StreamOffer) -> bool:
-    if offer.draft_active != offer.synced_active:
-        return True
-    return offer.draft_active and offer.draft_share != offer.synced_share
+    return offer_change(offer) is not None
+
+
+def geo_changes(stream: Stream) -> tuple[list[str], list[str]]:
+    """The countries the draft adds and removes, each in draft / synced order."""
+    synced = stream.synced_geo or []
+    draft = stream.draft_geo or []
+    return [c for c in draft if c not in synced], [c for c in synced if c not in draft]
 
 
 def stream_pending(stream: Stream) -> bool:

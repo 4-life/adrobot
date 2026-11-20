@@ -81,10 +81,11 @@ adrobot/
 - The database and API are vendor-neutral (`external_id`, `offer_id`, `state`, `/tracker/*`).
 - Adapter tests: Keitaro JSON → port types, and Keitaro errors → `TrackerError`.
 
-## Phase 3: Draft Editing and Shares
+## Phase 3: Draft Editing and Shares — done
 
 - `campaigns/shares.py` (pure): equal split of what's left after pins, largest-remainder rounding, validation errors.
-- `campaigns/diff.py`: per-row change markers, added and removed geo countries, and the pending flag.
+- `campaigns/pending.py`: per-offer change markers (`added` / `removed` / `share`), added and removed geo countries, and the pending flags.
+- `campaigns/drafts.py` (pure): add, remove (an offer added only in this draft is dropped, a synced one goes to Removed), bring back (with its last pin), pin / unpin (1-100%), set geo, cancel (a new campaign is deleted). Every offer change rebalances the shares. Archived and unsupported-layout campaigns are read-only (`409`).
 - Geo countries draft: `PUT /streams/{id}/geo` (ISO codes, uppercased, deduplicated, at least one).
 - Endpoints: add, patch (pin), remove, restore, cancel and cancel-all.
 - Unit tests: share tables (1 to 10 offers, with and without pins, edge cases), the diff and restore.

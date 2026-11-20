@@ -184,17 +184,18 @@ There's no auth: the MVP runs only on the local machine (see [Security](#securit
 | Endpoint | Purpose |
 |---|---|
 | `GET /health` | health check (also checks Postgres) |
+| *errors* | `404` unknown campaign / stream / offer, `409` read-only campaign (archived, unsupported layout) or an edit that doesn't apply (already removed, …), `422` invalid input, `502` tracker error; body `{detail}` |
 | `POST /sync/fetch` | Fetch streams. Returns the campaigns flagged Conflict. |
-| `GET /campaigns?scope=ours\|all` | campaigns (`ours` by default) with their streams, draft offers, removed offers, pending/conflict/new/archived flags, and the draft's validation errors |
+| `GET /campaigns?scope=ours\|all` | campaigns (`ours` by default) with their streams, draft offers, removed offers, pending/conflict/new/archived flags; per offer its `change` (`added` / `removed` / `share`), per stream `geo_added` / `geo_removed` and `errors` (why the draft can't be pushed). Every edit endpoint returns the campaign in this shape |
 | `POST /campaigns` | `{name, alias?, geo[], domain_id, group_id?, traffic_source_id?, offer_ids[]}`: creates a new draft campaign |
 | `GET /tracker/offers?q=` · `GET /tracker/domains` · `GET /tracker/groups` · `GET /tracker/sources` | tracker lookups (cached for 60 s) |
 | `PUT /streams/{id}/geo` | `{countries[]}`: set the geo stream's countries in the draft |
 | `POST /streams/{id}/offers` | `{offer_id}`: add an offer to the draft. `409` if it's already active or removed (use bring back). |
-| `PATCH /streams/{id}/offers/{offer_id}` | `{pinned, pinned_share}` |
+| `PATCH /streams/{id}/offers/{offer_id}` | `{pinned, pinned_share}` (1-100). `offer_id` is the tracker's offer id; `{id}` is AdRobot's stream id |
 | `DELETE /streams/{id}/offers/{offer_id}` | remove the offer in the draft |
 | `POST /streams/{id}/offers/{offer_id}/restore` | Bring back |
 | `POST /campaigns/{id}/push` · `POST /sync/push-all` | Push to KT (creates new campaigns). `409` on Conflict, `422` on an invalid draft, `502` with Keitaro's error message. |
-| `POST /campaigns/{id}/cancel` · `POST /sync/cancel-all` | Cancel changes |
+| `POST /campaigns/{id}/cancel` · `POST /sync/cancel-all` | Cancel changes: `{deleted, campaign}` (a new draft campaign is deleted) / `{cancelled, deleted}` |
 | `POST /campaigns/{id}/resolve` | `{keep_draft: bool}`: resolve a Conflict |
 
 ## Postgres

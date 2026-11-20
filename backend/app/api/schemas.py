@@ -2,7 +2,14 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.campaigns.pending import campaign_pending, offer_pending, stream_pending
+from app.campaigns.drafts import share_errors
+from app.campaigns.pending import (
+    OfferChange,
+    campaign_pending,
+    geo_changes,
+    offer_change,
+    stream_pending,
+)
 from app.models.campaign import ARCHIVED, Campaign, Stream, StreamOffer
 
 
@@ -19,6 +26,7 @@ class OfferOut(BaseModel):
     pinned_share: int | None
     removed_by: str | None
     removed_at: datetime | None
+    change: OfferChange | None  # vs. synced: added / removed / share
     pending: bool
 
 
@@ -29,7 +37,10 @@ class StreamOut(BaseModel):
     position: int
     synced_geo: list[str] | None
     draft_geo: list[str] | None
+    geo_added: list[str]
+    geo_removed: list[str]
     offers: list[OfferOut]
+    errors: list[str]  # why the draft can't be pushed
     pending: bool
 
 
@@ -65,6 +76,29 @@ class LookupOut(BaseModel):
     name: str
 
 
+class CancelOut(BaseModel):
+    deleted: bool  # a new draft campaign was dropped entirely
+    campaign: CampaignOut | None
+
+
+class CancelAllOut(BaseModel):
+    cancelled: int
+    deleted: int
+
+
+class GeoIn(BaseModel):
+    countries: list[str]
+
+
+class AddOfferIn(BaseModel):
+    offer_id: int
+
+
+class PinIn(BaseModel):
+    pinned: bool
+    pinned_share: int | None = None
+
+
 def offer_out(offer: StreamOffer) -> OfferOut:
     return OfferOut(
         id=offer.id,
@@ -79,11 +113,13 @@ def offer_out(offer: StreamOffer) -> OfferOut:
         pinned_share=offer.pinned_share,
         removed_by=offer.removed_by,
         removed_at=offer.removed_at,
-        pending=offer_pending(offer),
+        change=offer_change(offer),
+        pending=offer_change(offer) is not None,
     )
 
 
 def stream_out(stream: Stream) -> StreamOut:
+    added, removed = geo_changes(stream)
     return StreamOut(
         id=stream.id,
         external_id=stream.external_id,
@@ -91,7 +127,10 @@ def stream_out(stream: Stream) -> StreamOut:
         position=stream.position,
         synced_geo=stream.synced_geo,
         draft_geo=stream.draft_geo,
+        geo_added=added,
+        geo_removed=removed,
         offers=[offer_out(o) for o in stream.offers],
+        errors=share_errors(stream),
         pending=stream_pending(stream),
     )
 
