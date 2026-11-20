@@ -4,11 +4,13 @@ import { Spinner } from "@/components/shared/Spinner/Spinner";
 
 import type { Campaign } from "../../types";
 import { useCampaignAction } from "../../useCampaignAction";
+import { useLeaveWhenDeleted } from "../../useLeaveWhenDeleted";
 import { ActionFeedback } from "../ActionFeedback/ActionFeedback";
 
 // Push to KT / Cancel changes for one campaign.
 export function CampaignActions({ campaign, blocked }: { campaign: Campaign; blocked: boolean }) {
   const action = useCampaignAction();
+  useLeaveWhenDeleted(action.result);
   const canAct = campaign.pending && !action.busy;
 
   return (

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useFetcher } from "react-router";
+import { useFetcher, useNavigate } from "react-router";
 
 import { Button } from "@/components/shared/Button/Button";
 import { Dialog } from "@/components/shared/Dialog/Dialog";
@@ -115,14 +115,19 @@ export function NewCampaignDialog() {
     }
   }, [open, defaults]);
 
-  // Close once the draft is created.
+  // Once the draft is created: close, and open its page.
+  const navigate = useNavigate();
   useEffect(() => {
-    if (submitted.current && !action.busy && action.result?.ok) {
+    const result = action.result;
+    if (submitted.current && !action.busy && result?.ok) {
       submitted.current = false;
       setOpen(false);
       setForm(EMPTY);
+      if (result.campaignId) {
+        void navigate(`/campaigns/${result.campaignId}`);
+      }
     }
-  }, [action.busy, action.result]);
+  }, [action.busy, action.result, navigate]);
 
   const close = () => {
     setOpen(false);

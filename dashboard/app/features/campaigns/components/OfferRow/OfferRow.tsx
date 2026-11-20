@@ -1,10 +1,10 @@
-import { Badge } from "@/components/shared/Badge/Badge";
 import { Button } from "@/components/shared/Button/Button";
+import { PinIcon } from "@/components/shared/PinIcon/PinIcon";
 
 import type { Offer } from "../../types";
 import { useCampaignAction } from "../../useCampaignAction";
 import { ChangeBadge } from "../ChangeBadge/ChangeBadge";
-import { PinControl } from "../PinControl/PinControl";
+import { PinToggle } from "../PinToggle/PinToggle";
 import { ShareCell } from "../ShareCell/ShareCell";
 
 export function OfferRow({
@@ -26,17 +26,18 @@ export function OfferRow({
       </td>
       <td className="py-2 pr-3">
         <ShareCell offer={offer} />
-        {offer.pinned && (
-          <span className="ml-1.5">
-            <Badge>pinned</Badge>
-          </span>
+        {readOnly ? (
+          offer.pinned && (
+            <span className="ml-1.5 inline-flex align-middle text-amber-300" title="Pinned">
+              <PinIcon filled />
+            </span>
+          )
+        ) : (
+          <PinToggle streamId={streamId} offer={offer} />
         )}
       </td>
       <td className="py-2 pr-3">
         <ChangeBadge change={offer.change} />
-      </td>
-      <td className="py-2 pr-3">
-        {!readOnly && <PinControl streamId={streamId} offer={offer} disabled={action.busy} />}
       </td>
       <td className="py-2 text-right">
         {!readOnly && (

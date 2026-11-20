@@ -23,7 +23,6 @@ export function OffersTable({ stream, readOnly }: { stream: Stream; readOnly: bo
               <th className="pb-1 font-normal">Offer</th>
               <th className="pb-1 font-normal">Share</th>
               <th className="pb-1 font-normal">Change</th>
-              <th className="pb-1 font-normal">Pin</th>
               <th className="pb-1" />
             </tr>
           </thead>

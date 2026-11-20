@@ -17,6 +17,8 @@ const LONG_TIMEOUT_MS = 300_000;
 
 export const listCampaigns = () => api<Campaign[]>("/campaigns?scope=all");
 
+export const getCampaign = (campaignId: number) => api<Campaign>(`/campaigns/${campaignId}`);
+
 export const fetchStreams = () =>
   api<FetchResult>("/sync/fetch", { method: "POST", timeoutMs: LONG_TIMEOUT_MS });
 

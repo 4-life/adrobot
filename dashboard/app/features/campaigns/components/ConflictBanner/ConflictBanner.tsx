@@ -3,11 +3,13 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog/ConfirmDialog";
 import { Notice } from "@/components/shared/Notice/Notice";
 
 import { useCampaignAction } from "../../useCampaignAction";
+import { useLeaveWhenDeleted } from "../../useLeaveWhenDeleted";
 import { ActionFeedback } from "../ActionFeedback/ActionFeedback";
 
 // The tracker changed under a pending draft: keep the draft (and push it over) or cancel it.
 export function ConflictBanner({ campaignId }: { campaignId: number }) {
   const action = useCampaignAction();
+  useLeaveWhenDeleted(action.result);
 
   return (
     <div className="space-y-2">

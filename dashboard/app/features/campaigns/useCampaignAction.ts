@@ -2,10 +2,12 @@ import { useFetcher } from "react-router";
 
 import type { ActionResult } from "./types";
 
+export const CAMPAIGN_ACTION_ROUTE = "/campaign-action"; // routes/campaign-action.ts
+
 type FieldValue = string | number | boolean | null | (string | number)[];
 
-// Posts one campaign action (an `intent` and its fields) to the home route's action, without
-// navigating; each component gets its own pending state and result.
+// Posts one campaign action (an `intent` and its fields) to the campaign-action route, without
+// navigating (every page's loader then reloads); each component gets its own pending state and result.
 export function useCampaignAction() {
   const fetcher = useFetcher<ActionResult>();
 
@@ -24,7 +26,7 @@ export function useCampaignAction() {
         form.set(name, String(value));
       }
     }
-    void fetcher.submit(form, { method: "post", action: "/?index" });
+    void fetcher.submit(form, { method: "post", action: CAMPAIGN_ACTION_ROUTE });
   };
 
   const result = fetcher.data;

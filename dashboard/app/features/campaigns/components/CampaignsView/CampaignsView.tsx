@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { type CampaignFilter, DEFAULT_FILTER, filterCampaigns, filterOptions, type Scope } from "../../filters";
 import type { Campaign } from "../../types";
 import { CampaignFilters } from "../CampaignFilters/CampaignFilters";
-import { CampaignList } from "../CampaignList/CampaignList";
+import { CampaignsTable } from "../CampaignsTable/CampaignsTable";
 
 const SCOPE_KEY = "adrobot.scope"; // the Ours / All choice, remembered in this browser
 
@@ -16,8 +16,8 @@ function storedScope(): Scope | null {
   }
 }
 
-// The campaigns page body: filters (Ours by default) and the matching campaign cards.
-export function CampaignsView({ campaigns, redirectUrl }: { campaigns: Campaign[]; redirectUrl: string }) {
+// The campaigns page body: filters (Ours by default) and the table of matching campaigns.
+export function CampaignsView({ campaigns }: { campaigns: Campaign[] }) {
   const [filter, setFilter] = useState<CampaignFilter>(DEFAULT_FILTER);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export function CampaignsView({ campaigns, redirectUrl }: { campaigns: Campaign[
           {shown.length} of {campaigns.length} campaigns
         </span>
       </div>
-      <CampaignList campaigns={shown} redirectUrl={redirectUrl} />
+      <CampaignsTable campaigns={shown} />
     </div>
   );
 }

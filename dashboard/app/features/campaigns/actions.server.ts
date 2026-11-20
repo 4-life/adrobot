@@ -37,7 +37,8 @@ async function dispatch(form: FormData): Promise<ActionResult> {
     }
     case "cancel": {
       const result = await campaignsApi.cancelCampaign(id(form, "campaignId"));
-      return { ok: true, message: result.deleted ? "Draft deleted" : "Changes cancelled" };
+      const message = result.deleted ? "Draft deleted" : "Changes cancelled";
+      return { ok: true, message, deleted: result.deleted };
     }
     case "cancel-all": {
       const result = await campaignsApi.cancelAll();
@@ -48,8 +49,9 @@ async function dispatch(form: FormData): Promise<ActionResult> {
     }
     case "resolve": {
       const keepDraft = text(form, "keepDraft") === "true";
-      await campaignsApi.resolveConflict(id(form, "campaignId"), keepDraft);
-      return { ok: true, message: keepDraft ? "Draft kept: push it" : "Draft cancelled" };
+      const result = await campaignsApi.resolveConflict(id(form, "campaignId"), keepDraft);
+      const message = keepDraft ? "Draft kept: push it" : "Draft cancelled";
+      return { ok: true, message, deleted: result.deleted };
     }
     case "add-offer": {
       await campaignsApi.addOffer(id(form, "streamId"), id(form, "offerId"));
@@ -70,7 +72,7 @@ async function dispatch(form: FormData): Promise<ActionResult> {
       return { ok: true };
     }
     case "create": {
-      await campaignsApi.createCampaign({
+      const campaign = await campaignsApi.createCampaign({
         name: text(form, "name"),
         alias: text(form, "alias"),
         countries: parseCountries(text(form, "countries")),
@@ -79,7 +81,11 @@ async function dispatch(form: FormData): Promise<ActionResult> {
         traffic_source_id: optionalId(form, "sourceId"),
         offer_ids: form.getAll("offerIds").map(Number),
       });
-      return { ok: true, message: "Draft created: push it to create it in the tracker" };
+      return {
+        ok: true,
+        message: "Draft created: push it to create it in the tracker",
+        campaignId: campaign.id,
+      };
     }
     default:
       return { ok: false, error: `Unknown action: ${intent || "none"}` };

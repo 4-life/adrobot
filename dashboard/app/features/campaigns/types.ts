@@ -97,5 +97,12 @@ export type NewCampaignData =
 
 // What every campaign action returns to its form (route action → fetcher.data).
 export type ActionResult =
-  | { ok: true; message?: string; mismatch?: string[]; pushResults?: PushItem[] }
+  | {
+      ok: true;
+      message?: string;
+      mismatch?: string[];
+      pushResults?: PushItem[];
+      deleted?: boolean; // the campaign is gone (a new draft cancelled): leave its page
+      campaignId?: number; // the campaign just created: open its page
+    }
   | { ok: false; error: string };

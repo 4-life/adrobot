@@ -175,11 +175,12 @@ React Router SSR. Only the dashboard server talks to the API: route loaders and 
 
 | Where | What |
 |---|---|
-| `app/routes/home.tsx` | The page. The loader reads the campaigns and the redirect URL (an API error is shown above them). The single action runs every campaign form (`intent`). It composes the shared Header and Footer with the feature components |
-| `app/routes/offers-search.ts`, `new-campaign-data.ts` | Resource routes for fetchers: offer search, and the New campaign dialog's defaults and selects |
-| `app/components/shared/` | Feature-agnostic UI: `Header`, `Footer`, `Button`, `Badge`, `Dialog` (native `<dialog>`), `ConfirmDialog` (never `window.confirm`), `Notice`, `Spinner`, `Field` / `TextInput` / `Select` |
+| `app/routes/home.tsx` | The campaigns **table** (`/`): filters (Ours by default), and one row per campaign whose name opens its page. The loader reads the campaigns; the header holds the sync bar and New campaign |
+| `app/routes/campaign.tsx` | **One campaign** (`/campaigns/:id`), opened by id: status, Push / Cancel, conflict, offers, Removed, the geo line. An unknown id is a 404 page with a link back |
+| `app/routes/campaign-action.ts`, `offers-search.ts`, `new-campaign-data.ts` | Resource routes for fetchers: every campaign form posts to `campaign-action` (then each page's loader reloads); offer search; the New campaign dialog's defaults and selects |
+| `app/components/shared/` | Feature-agnostic UI: `Header`, `Footer`, `Button`, `Badge`, `Dialog` (native `<dialog>`), `ConfirmDialog` (never `window.confirm`), `Notice`, `Spinner`, `PinIcon`, `Field` / `TextInput` / `Select` |
 | `app/features/campaigns/` | The campaigns feature. `api.server.ts` has the API calls, `actions.server.ts` the intent dispatcher, `types.ts` the API shapes, and `filters.ts` / `countries.ts` hold pure helpers. `useCampaignAction.ts` posts one action per component, with its own pending state and result |
-| `app/features/campaigns/components/` | `CampaignsView`, `CampaignFilters`, `CampaignList`, `CampaignCard`, `CampaignBadges`, `CampaignActions`, `ConflictBanner`, `GeoEditor`, `OffersTable`, `OfferRow`, `ShareCell`, `ChangeBadge`, `PinControl`, `RemovedOffers`, `OfferSearch`, `AddOffer`, `ActionFeedback`, `SyncBar`, `PushAllResults`, `NewCampaignDialog` |
+| `app/features/campaigns/components/` | `CampaignsView`, `CampaignFilters`, `CampaignsTable`, `CampaignDetails`, `CampaignBadges`, `CampaignActions`, `ConflictBanner`, `GeoRow`, `OffersTable`, `OfferRow`, `ShareCell`, `ChangeBadge`, `PinToggle`, `RemovedOffers`, `OfferSearch`, `AddOffer`, `ActionFeedback`, `SyncBar`, `PushAllResults`, `NewCampaignDialog` |
 
 **Page**:
 
@@ -187,10 +188,11 @@ React Router SSR. Only the dashboard server talks to the API: route loaders and 
   - **Fetch streams**, with the last fetch time.
   - **New campaign**.
   - The pending count, with **Push all** and **Cancel all**.
-- **Campaigns**: a card per campaign. After every action the loader reloads them.
+- **Campaigns table** (`/`): campaign (name → its page, alias), status badges, tracker id, domain, group, source, active offers, geo countries. Creating a draft opens its page.
+- **Campaign page** (`/campaigns/:id`): everything below for one campaign. After every action the loader reloads it. Cancelling a new draft deletes it and goes back to the table.
   - The header shows its name, Keitaro ID (or "New"), alias, domain, group and source, the Not synced / Conflict / Archived badge, **Push to KT** and **Cancel changes**.
   - **Geo stream**: one small read-only line at the bottom of the card: its countries → the redirect target. The countries are set when the campaign is created.
-  - **Offers stream**: a table with offer, share %, pin toggle with share input, change marker and remove button, plus **Add offer** (search) and a collapsible **Removed** list with **Bring back**.
+  - **Offers stream**: a table with offer, share % with a pin icon after it (pins the offer at its current share; click again to unpin), change marker and remove button, plus **Add offer** (search) and a collapsible **Removed** list with **Bring back**.
   - **Show: Ours / All**, set to **Ours** by default. It's a filter only, and every campaign can be managed under All. The choice is remembered in the browser. A campaign is "ours" when its name starts with `CAMPAIGN_NAME_PREFIX`.
   - Filters by group, domain and source, a name search, and "Pending only".
 - Confirmations (Push all, Cancel, Keep my draft) use a Dialog, never `window.confirm`.
@@ -206,6 +208,7 @@ There's no auth: the MVP runs only on the local machine (see [Security](#securit
 | `POST /sync/fetch` | Fetch streams. Returns the campaigns flagged Conflict. |
 | `GET /campaigns?scope=ours\|all` | campaigns (`ours` by default; each carries `ours`) with their streams, draft offers, removed offers, pending/conflict/new/archived flags; per offer its `change` (`added` / `removed` / `share`), per stream `geo_added` / `geo_removed` and `errors` (why the draft can't be pushed). Every edit endpoint returns the campaign in this shape |
 | `GET /campaigns/defaults` | prefills the New campaign form: the next name, a generated alias, `[DEFAULT_GEO]`, the redirect URL |
+| `GET /campaigns/{id}` | one campaign, in the same shape as the list; `404` for an unknown id |
 | `POST /campaigns` | `{name?, alias?, countries?, domain_id, group_id?, traffic_source_id?, offer_ids[]}` → `201` with a new **draft** campaign (New, pending). Blank name/alias/countries use the defaults. Domain, group, source and offers must be active in the tracker (`422`); a duplicate alias is `409` |
 | `GET /tracker/offers?q=` · `GET /tracker/domains` · `GET /tracker/groups` · `GET /tracker/sources` | tracker lookups (cached for 60 s) |
 | `PUT /streams/{id}/geo` | `{countries[]}`: set the geo stream's countries in the draft (the dashboard doesn't use it: geo is read-only after creation) |

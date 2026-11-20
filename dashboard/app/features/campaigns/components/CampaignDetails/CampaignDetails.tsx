@@ -20,7 +20,8 @@ function Meta({ campaign }: { campaign: Campaign }) {
   return <p className="text-xs text-muted-foreground">{parts.join(" · ")}</p>;
 }
 
-export function CampaignCard({ campaign, redirectUrl }: { campaign: Campaign; redirectUrl: string }) {
+// One campaign's page body: status, push / cancel, conflict, offers, removed offers, geo.
+export function CampaignDetails({ campaign, redirectUrl }: { campaign: Campaign; redirectUrl: string }) {
   const readOnly = campaign.archived || !campaign.layout_supported;
   const geo = campaign.streams.find((s) => s.role === "geo");
   const offers = campaign.streams.find((s) => s.role === "offers");
@@ -31,7 +32,7 @@ export function CampaignCard({ campaign, redirectUrl }: { campaign: Campaign; re
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-semibold">{campaign.name}</h2>
+            <h2 className="text-lg font-semibold">{campaign.name}</h2>
             <CampaignBadges campaign={campaign} />
           </div>
           <Meta campaign={campaign} />

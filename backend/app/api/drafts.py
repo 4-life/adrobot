@@ -6,9 +6,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_tracker
+from app.api.loaders import WITH_STREAMS, load_campaign, load_stream
 from app.api.schemas import (
     AddOfferIn,
     CampaignOut,
@@ -30,31 +30,6 @@ router = APIRouter()
 
 Session = Annotated[AsyncSession, Depends(get_session)]
 Tracker = Annotated[TrackerProvider, Depends(get_tracker)]
-
-WITH_STREAMS = selectinload(Campaign.streams).selectinload(Stream.offers)
-
-
-async def load_campaign(session: AsyncSession, campaign_id: int) -> Campaign:
-    campaign = await session.scalar(
-        select(Campaign).where(Campaign.id == campaign_id).options(WITH_STREAMS)
-    )
-    if campaign is None:
-        raise DraftError("not_found", f"Campaign {campaign_id} not found")
-    return campaign
-
-
-async def load_stream(session: AsyncSession, stream_id: int) -> Stream:
-    """The stream with its whole campaign loaded, checked editable."""
-    stream = await session.scalar(
-        select(Stream)
-        .where(Stream.id == stream_id)
-        .options(selectinload(Stream.campaign).options(WITH_STREAMS))
-    )
-    if stream is None:
-        raise DraftError("not_found", f"Stream {stream_id} not found")
-    drafts.ensure_editable(stream.campaign)
-    return stream
-
 
 async def saved(session: AsyncSession, stream: Stream) -> CampaignOut:
     await session.commit()

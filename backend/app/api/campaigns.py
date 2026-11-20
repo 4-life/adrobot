@@ -3,9 +3,9 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_tracker
+from app.api.loaders import WITH_STREAMS, load_campaign
 from app.api.schemas import (
     CampaignDefaultsOut,
     CampaignOut,
@@ -18,7 +18,7 @@ from app.campaigns.drafts import DraftError
 from app.campaigns.sync import fetch_all
 from app.config import settings
 from app.db import get_session
-from app.models.campaign import Campaign, Stream
+from app.models.campaign import Campaign
 from app.tracker.cache import lookups
 from app.tracker.port import LookupItem, TrackerProvider
 
@@ -43,7 +43,7 @@ async def list_campaigns(
     """New drafts first, then the newest tracker campaigns. "ours": the name prefix."""
     query = (
         select(Campaign)
-        .options(selectinload(Campaign.streams).selectinload(Stream.offers))
+        .options(WITH_STREAMS)
         .order_by(Campaign.external_id.desc().nulls_first())
     )
     if scope == "ours":
@@ -70,6 +70,12 @@ async def campaign_defaults(session: Session) -> CampaignDefaultsOut:
         countries=[settings.default_geo],
         redirect_url=settings.geo_redirect_url,
     )
+
+
+# After /campaigns/defaults: a path like that must never be read as an id.
+@router.get("/campaigns/{campaign_id}")
+async def get_campaign(campaign_id: int, session: Session) -> CampaignOut:
+    return campaign_out(await load_campaign(session, campaign_id))
 
 
 def _pick(items: list[LookupItem], item_id: int, what: str) -> LookupItem:
