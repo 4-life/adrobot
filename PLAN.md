@@ -117,9 +117,11 @@ adrobot/
 - Built: `campaigns/push.py` (port only, tested against an in-memory fake tracker), the Keitaro adapter's `get_streams` / `push_offers` / `push_geo` and update payloads, `POST /campaigns/{id}/push`, `POST /sync/push-all`, `POST /campaigns/{id}/resolve`, and tracker errors → `502`.
 - **Now possible: the first real push** (Phase 4). Check that its `mismatch` is empty, and that a second push after removing an offer drops it (if Keitaro merged instead, `mismatch` says so).
 
-## Phase 6: Dashboard
+## Phase 6: Dashboard — done
 
-- `scripts/gen-api-types.sh` dumps the API schema and runs `openapi-typescript`, writing `dashboard/app/api/types.ts`.
+- API types are hand-written for now (`features/campaigns/types.ts`). `scripts/gen-api-types.sh` (`openapi-typescript`) is left for later, because it needs a new dev dependency.
+- Structure: `components/shared/` (feature-agnostic UI) and `features/campaigns/` (API calls, action dispatcher, helpers, components). `routes/home.tsx` only composes. See [DESIGN: Dashboard](docs/DESIGN.md#dashboard).
+- No new npm dependencies: dialogs use the native `<dialog>`.
 - Header: Fetch streams (with a spinner and the last fetch time), New campaign, the pending count, Push all and Cancel all.
 - The New campaign dialog: name, alias, geo (multi-select of countries), domain, group and source selects, and an offers search. An error stays in the dialog.
 - Campaign cards:
