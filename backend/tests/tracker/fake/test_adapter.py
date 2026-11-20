@@ -10,6 +10,7 @@ from app.campaigns.merge import apply_campaign_fields, merge_streams
 from app.campaigns.pending import campaign_pending
 from app.campaigns.push import push, stream_of
 from app.campaigns.sync import fetch_one
+from app.config import settings
 from app.models.campaign import Campaign
 from app.tracker.fake import adapter as fake
 from app.tracker.port import OFFERS, OfferShare, TrackerCampaign, TrackerProvider
@@ -133,7 +134,9 @@ async def test_fetch_one_refuses_a_new_draft() -> None:
 
 
 async def test_fetch_with_a_prefix_skips_the_others_streams() -> None:
-    campaigns = {c.external_id: c for c in await tracker().fetch_campaigns("test_name_campaign")}
+    # The seed names our campaign after CAMPAIGN_NAME_PREFIX, whatever it is set to.
+    prefix = settings.campaign_name_prefix
+    campaigns = {c.external_id: c for c in await tracker().fetch_campaigns(prefix)}
 
     assert campaigns[1001].streams_fetched and campaigns[1001].streams is not None
     assert not campaigns[1002].streams_fetched and campaigns[1002].streams is None
