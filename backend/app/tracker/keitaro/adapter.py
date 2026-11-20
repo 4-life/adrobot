@@ -29,6 +29,7 @@ from app.tracker.port import (
 
 STREAM_FETCH_CONCURRENCY = 8
 UNEXPECTED_DATA = 502  # TrackerError.status: Keitaro answered, but not as its schema says
+NOT_FOUND = 404
 ACTIVE = "active"
 KEITARO_ARCHIVED = "deleted"
 STATES: dict[str, CampaignState] = {
@@ -126,6 +127,23 @@ class KeitaroTracker:
             for c in campaigns
             if c.id is not None
         ]
+
+    async def fetch_campaign(self, campaign_id: int) -> TrackerCampaign | None:
+        return await _translated(self._fetch_campaign(campaign_id))
+
+    async def _fetch_campaign(self, campaign_id: int) -> TrackerCampaign | None:
+        try:
+            campaign = await self._kt.get_campaign(campaign_id)
+        except KeitaroError as error:
+            if error.status == NOT_FOUND:
+                return None
+            raise
+        offers, sources = await asyncio.gather(self._kt.list_offers(), self._kt.list_sources())
+        offer_names = {o.id: o.name for o in offers if o.id is not None and o.name}
+        source_names = {s.id: s.name for s in sources if s.id is not None and s.name}
+        live = campaign.state != KEITARO_ARCHIVED
+        streams = await self._raw_streams(campaign_id) if live else None
+        return to_campaign(campaign, streams, offer_names, source_names)
 
     async def _streams_of(self, campaign_ids: list[int]) -> dict[int, list[dict[str, Any]]]:
         """Each campaign's streams as raw JSON, a few campaigns at a time."""

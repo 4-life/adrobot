@@ -1,6 +1,5 @@
-"""Fetch streams: reads every tracker campaign with its streams and merges it into Postgres.
-
-Depends only on the tracker port; the adapter is injected.
+"""Fetch from the tracker: every campaign (Fetch streams), or one (its page's Fetch button),
+merged into Postgres. Depends only on the tracker port; the adapter is injected.
 """
 
 from dataclasses import dataclass
@@ -10,7 +9,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.campaigns.drafts import DraftError
 from app.campaigns.merge import apply_campaign_fields, merge_streams
+from app.campaigns.store import Store
 from app.models.campaign import ARCHIVED, Campaign, Stream, SyncLog
 from app.tracker.port import TrackerProvider
 
@@ -53,3 +54,28 @@ async def fetch_all(session: AsyncSession, tracker: TrackerProvider) -> FetchRes
     session.add(SyncLog(action="fetch", ok=True, summary=summary))
     await session.commit()
     return FetchResult(fetched_at=now, campaigns=len(seen), conflicts=[c.id for c in conflicts])
+
+
+async def fetch_one(
+    store: Store, tracker: TrackerProvider, campaign: Campaign, now: datetime | None = None
+) -> bool:
+    """Refreshes one campaign from the tracker, as a full fetch would. Returns its Conflict
+    flag. A campaign the tracker no longer has is marked archived."""
+    if campaign.external_id is None:
+        raise DraftError("invalid", "This campaign isn't in the tracker yet: push it first")
+    now = now or datetime.now(UTC)
+    tracked = await tracker.fetch_campaign(campaign.external_id)
+    if tracked is None:
+        campaign.state = ARCHIVED
+        campaign.fetched_at = now
+    else:
+        apply_campaign_fields(campaign, tracked, now)
+        if tracked.streams is not None:
+            merge_streams(campaign, tracked.streams, now)
+    conflict = campaign.conflict
+    summary = "not in the tracker: archived" if tracked is None else "fetched"
+    store.add(
+        SyncLog(campaign_id=campaign.id, action="fetch", step="campaign", ok=True, summary=summary)
+    )
+    await store.commit()
+    return conflict

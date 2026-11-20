@@ -15,7 +15,7 @@ from app.api.schemas import (
 )
 from app.campaigns.create import OfferPick, make_alias, new_draft, next_name, normalize_alias
 from app.campaigns.drafts import DraftError
-from app.campaigns.sync import fetch_all
+from app.campaigns.sync import fetch_all, fetch_one
 from app.config import settings
 from app.db import get_session
 from app.models.campaign import Campaign
@@ -69,6 +69,14 @@ async def campaign_defaults(session: Session) -> CampaignDefaultsOut:
 @router.get("/campaigns/{campaign_id}")
 async def get_campaign(campaign_id: int, session: Session) -> CampaignOut:
     return campaign_out(await load_campaign(session, campaign_id))
+
+
+@router.post("/campaigns/{campaign_id}/fetch")
+async def fetch_campaign(campaign_id: int, session: Session, tracker: Tracker) -> CampaignOut:
+    """Refreshes this one campaign from the tracker (its page's Fetch button)."""
+    campaign = await load_campaign(session, campaign_id)
+    await fetch_one(session, tracker, campaign)
+    return campaign_out(campaign)
 
 
 def _pick(items: list[LookupItem], item_id: int, what: str) -> LookupItem:

@@ -74,6 +74,7 @@ class FetchOut(BaseModel):
 class LookupOut(BaseModel):
     id: int
     name: str
+    active: bool  # False: archived in the tracker (listed, not usable)
 
 
 class CancelOut(BaseModel):

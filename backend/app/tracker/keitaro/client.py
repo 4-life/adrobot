@@ -123,6 +123,9 @@ class KeitaroClient:
                 return campaigns
             offset += page_size
 
+    async def get_campaign(self, campaign_id: int) -> Campaign:
+        return _CAMPAIGN.validate_python(await self._read(f"/campaigns/{campaign_id}"))
+
     async def list_streams(self, campaign_id: int) -> list[Stream]:
         return _STREAMS.validate_python(await self._read(f"/campaigns/{campaign_id}/streams"))
 

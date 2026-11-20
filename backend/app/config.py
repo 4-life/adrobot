@@ -8,8 +8,9 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # The tracker adapter (app/tracker/factory.py).
-    tracker: Literal["keitaro"] = "keitaro"
+    # The tracker adapter (app/tracker/factory.py). "fake": in-memory sample data, for local
+    # testing without Keitaro (app/tracker/fake/adapter.py).
+    tracker: Literal["keitaro", "fake"] = "keitaro"
 
     # Keitaro Admin API: base URL without a path (the client adds /admin_api/v1).
     keitaro_url: str = ""

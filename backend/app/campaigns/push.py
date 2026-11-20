@@ -11,11 +11,11 @@ changed streams. Depends only on the tracker port.
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Protocol
 
 from app.campaigns.drafts import DraftError, active_offers, ensure_editable, share_errors
 from app.campaigns.merge import merge_streams
 from app.campaigns.pending import campaign_pending, stream_pending
+from app.campaigns.store import Store
 from app.models.campaign import Campaign, Stream, SyncLog
 from app.tracker.port import (
     GEO,
@@ -28,14 +28,6 @@ from app.tracker.port import (
     TrackerProvider,
     TrackerStream,
 )
-
-
-class Store(Protocol):
-    """What push needs from the database session (an AsyncSession in the app)."""
-
-    def add(self, instance: object) -> None: ...
-
-    async def commit(self) -> None: ...
 
 
 @dataclass(frozen=True)
