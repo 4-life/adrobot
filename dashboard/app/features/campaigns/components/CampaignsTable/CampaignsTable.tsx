@@ -14,7 +14,7 @@ function CampaignRow({ campaign }: { campaign: Campaign }) {
   return (
     <tr className="border-t align-middle hover:bg-accent/40">
       <td className={CELL}>
-        <Link to={`/campaigns/${campaign.id}`} className="font-medium hover:underline">
+        <Link to={`/campaigns/${campaign.id}`} className="font-medium hover:underline max-w-[20ch] truncate block" title={campaign.name}>
           {campaign.name}
         </Link>
         <div className="text-xs text-muted-foreground">{campaign.alias}</div>

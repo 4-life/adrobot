@@ -46,7 +46,6 @@ export type Campaign = {
   traffic_source_name: string | null;
   state: "active" | "disabled" | "archived";
   archived: boolean;
-  ours: boolean;
   layout_supported: boolean;
   conflict: boolean;
   is_new: boolean;
@@ -73,6 +72,7 @@ export type CampaignDefaults = {
   alias: string;
   countries: string[];
   redirect_url: string;
+  name_prefix: string; // CAMPAIGN_NAME_PREFIX: the table's default search
 };
 export type NewCampaignInput = {
   name: string;

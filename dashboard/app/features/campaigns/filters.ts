@@ -1,10 +1,7 @@
 import type { Campaign, LookupItem } from "./types";
 
-export type Scope = "ours" | "all";
-
 export type CampaignFilter = {
-  scope: Scope;
-  search: string;
+  search: string; // name or alias contains it (CAMPAIGN_NAME_PREFIX by default)
   pendingOnly: boolean;
   groupId: number | null;
   domainId: number | null;
@@ -12,7 +9,6 @@ export type CampaignFilter = {
 };
 
 export const DEFAULT_FILTER: CampaignFilter = {
-  scope: "ours",
   search: "",
   pendingOnly: false,
   groupId: null,
@@ -24,7 +20,6 @@ export function filterCampaigns(campaigns: Campaign[], filter: CampaignFilter): 
   const needle = filter.search.trim().toLowerCase();
   return campaigns.filter(
     (c) =>
-      (filter.scope === "all" || c.ours) &&
       (!filter.pendingOnly || c.pending) &&
       (filter.groupId === null || c.group_id === filter.groupId) &&
       (filter.domainId === null || c.domain_id === filter.domainId) &&

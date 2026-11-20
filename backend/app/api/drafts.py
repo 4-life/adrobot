@@ -31,6 +31,7 @@ router = APIRouter()
 Session = Annotated[AsyncSession, Depends(get_session)]
 Tracker = Annotated[TrackerProvider, Depends(get_tracker)]
 
+
 async def saved(session: AsyncSession, stream: Stream) -> CampaignOut:
     await session.commit()
     return campaign_out(stream.campaign)

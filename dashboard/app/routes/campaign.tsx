@@ -24,8 +24,8 @@ export async function loader({ params }: Route.LoaderArgs) {
   }
 }
 
-export function meta({ data: loaded }: Route.MetaArgs) {
-  return [{ title: loaded ? `${loaded.campaign.name} · AdRobot` : "AdRobot" }];
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [{ title: loaderData ? `${loaderData.campaign.name} · AdRobot` : "AdRobot" }];
 }
 
 function BackLink() {

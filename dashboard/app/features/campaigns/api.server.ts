@@ -15,7 +15,7 @@ import type {
 // Reading every campaign on a shared tracker, or pushing all of them, takes a while.
 const LONG_TIMEOUT_MS = 300_000;
 
-export const listCampaigns = () => api<Campaign[]>("/campaigns?scope=all");
+export const listCampaigns = () => api<Campaign[]>("/campaigns");
 
 export const getCampaign = (campaignId: number) => api<Campaign>(`/campaigns/${campaignId}`);
 

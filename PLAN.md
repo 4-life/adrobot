@@ -131,7 +131,7 @@ adrobot/
   - Add offer with a search combobox;
   - the Removed list with Bring back;
   - Push to KT and Cancel.
-- A **Show: Ours / All** toggle, with Ours as the default. Ours means a name that starts with `CAMPAIGN_NAME_PREFIX`. The choice is kept in the URL and in `localStorage`.
+- The search starts filled with `CAMPAIGN_NAME_PREFIX` (our campaigns by default); clearing it shows every campaign. (It replaced an Ours / All toggle.)
 - Filters by group, domain and source, a name search, and Pending only.
 - Dialogs for confirmations. Validation errors are shown on the card, and Push is disabled while the draft is invalid.
 - Small page components, with children under `components/`.
@@ -152,6 +152,6 @@ adrobot/
 1. **Geo**: the geo stream's countries are set per campaign at creation (`AU` by default). The dashboard shows the geo stream as a small read-only line at the bottom of each card; it isn't edited there.
 2. **Campaign fields** (name, alias, domain, group, source) are set only at creation.
 3. **Offers stream** has no country filter for now.
-4. **Scope**: AdRobot manages every campaign on the (shared) tracker. The dashboard shows "ours" by default; see Phase 6.
+4. **Scope**: AdRobot manages every campaign on the (shared) tracker. The campaigns table's search starts at `CAMPAIGN_NAME_PREFIX`, so ours show by default.
 5. **MVP**: local only, no auth, no deploy, no Redis (the tracker lists are cached in the `api`'s memory).
 6. **Architecture**: DIP and Hexagonal (Ports and Adapters) for every external service. The core depends on ports it owns, and vendors live in adapter packages. See [DESIGN: Architecture](docs/DESIGN.md#architecture-ports-and-adapters).

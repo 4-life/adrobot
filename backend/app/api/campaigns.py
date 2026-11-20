@@ -1,4 +1,4 @@
-from typing import Annotated, Literal
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
@@ -37,20 +37,12 @@ async def fetch(session: Session, tracker: Tracker) -> FetchOut:
 
 
 @router.get("/campaigns")
-async def list_campaigns(
-    session: Session, scope: Literal["ours", "all"] = "ours"
-) -> list[CampaignOut]:
-    """New drafts first, then the newest tracker campaigns. "ours": the name prefix."""
+async def list_campaigns(session: Session) -> list[CampaignOut]:
+    """Every campaign: new drafts first, then the newest tracker campaigns."""
     query = (
-        select(Campaign)
-        .options(WITH_STREAMS)
-        .order_by(Campaign.external_id.desc().nulls_first())
+        select(Campaign).options(WITH_STREAMS).order_by(Campaign.external_id.desc().nulls_first())
     )
-    if scope == "ours":
-        ours = Campaign.name.startswith(settings.campaign_name_prefix, autoescape=True)
-        query = query.where(ours)
-    campaigns = await session.scalars(query)
-    return [campaign_out(c) for c in campaigns]
+    return [campaign_out(c) for c in await session.scalars(query)]
 
 
 async def _next_name(session: AsyncSession) -> str:
@@ -69,6 +61,7 @@ async def campaign_defaults(session: Session) -> CampaignDefaultsOut:
         alias=make_alias(name),
         countries=[settings.default_geo],
         redirect_url=settings.geo_redirect_url,
+        name_prefix=settings.campaign_name_prefix,
     )
 
 

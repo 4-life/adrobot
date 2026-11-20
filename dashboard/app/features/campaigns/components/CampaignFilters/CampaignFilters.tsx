@@ -1,7 +1,6 @@
-import { Button } from "@/components/shared/Button/Button";
 import { Select, TextInput } from "@/components/shared/Field/Field";
 
-import type { CampaignFilter, FilterOptions, Scope } from "../../filters";
+import type { CampaignFilter, FilterOptions } from "../../filters";
 import type { LookupItem } from "../../types";
 
 function IdSelect({
@@ -32,11 +31,6 @@ function IdSelect({
   );
 }
 
-const SCOPES: [Scope, string][] = [
-  ["ours", "Ours"],
-  ["all", "All"],
-];
-
 export function CampaignFilters({
   filter,
   options,
@@ -50,22 +44,10 @@ export function CampaignFilters({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div role="group" aria-label="Show" className="flex rounded-md border p-0.5">
-        {SCOPES.map(([scope, label]) => (
-          <Button
-            key={scope}
-            size="sm"
-            variant={filter.scope === scope ? "secondary" : "ghost"}
-            aria-pressed={filter.scope === scope}
-            onClick={() => set({ scope })}
-          >
-            {label}
-          </Button>
-        ))}
-      </div>
       <TextInput
+        type="search"
         aria-label="Search campaigns"
-        placeholder="Search name or alias"
+        placeholder="Search name or alias (empty: all)"
         value={filter.search}
         onChange={(event) => set({ search: event.target.value })}
         className="w-56"

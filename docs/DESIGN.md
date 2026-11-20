@@ -175,7 +175,7 @@ React Router SSR. Only the dashboard server talks to the API: route loaders and 
 
 | Where | What |
 |---|---|
-| `app/routes/home.tsx` | The campaigns **table** (`/`): filters (Ours by default), and one row per campaign whose name opens its page. The loader reads the campaigns; the header holds the sync bar and New campaign |
+| `app/routes/home.tsx` | The campaigns **table** (`/`): filters (the search starts at `CAMPAIGN_NAME_PREFIX`), and one row per campaign whose name opens its page. The loader reads the campaigns; the header holds the sync bar and New campaign |
 | `app/routes/campaign.tsx` | **One campaign** (`/campaigns/:id`), opened by id: status, Push / Cancel, conflict, offers, Removed, the geo line. An unknown id is a 404 page with a link back |
 | `app/routes/campaign-action.ts`, `offers-search.ts`, `new-campaign-data.ts` | Resource routes for fetchers: every campaign form posts to `campaign-action` (then each page's loader reloads); offer search; the New campaign dialog's defaults and selects |
 | `app/components/shared/` | Feature-agnostic UI: `Header`, `Footer`, `Button`, `Badge`, `Dialog` (native `<dialog>`), `ConfirmDialog` (never `window.confirm`), `Notice`, `Spinner`, `PinIcon`, `Field` / `TextInput` / `Select` |
@@ -193,7 +193,7 @@ React Router SSR. Only the dashboard server talks to the API: route loaders and 
   - The header shows its name, Keitaro ID (or "New"), alias, domain, group and source, the Not synced / Conflict / Archived badge, **Push to KT** and **Cancel changes**.
   - **Geo stream**: one small read-only line at the bottom of the card: its countries → the redirect target. The countries are set when the campaign is created.
   - **Offers stream**: a table with offer, share % with a pin icon after it (pins the offer at its current share; click again to unpin), change marker and remove button, plus **Add offer** (search) and a collapsible **Removed** list with **Bring back**.
-  - **Show: Ours / All**, set to **Ours** by default. It's a filter only, and every campaign can be managed under All. The choice is remembered in the browser. A campaign is "ours" when its name starts with `CAMPAIGN_NAME_PREFIX`.
+  - **Search**: starts filled with `CAMPAIGN_NAME_PREFIX`, so our campaigns show by default. Clear it to see every campaign on the tracker. It matches the name or the alias.
   - Filters by group, domain and source, a name search, and "Pending only".
 - Confirmations (Push all, Cancel, Keep my draft) use a Dialog, never `window.confirm`.
 
@@ -206,8 +206,8 @@ There's no auth: the MVP runs only on the local machine (see [Security](#securit
 | `GET /health` | health check (also checks Postgres), for manual checks; nothing polls it |
 | *errors* | `404` unknown campaign / stream / offer, `409` read-only campaign (archived, unsupported layout) or an edit that doesn't apply (already removed, …), `422` invalid input, `502` tracker error; body `{detail}` |
 | `POST /sync/fetch` | Fetch streams. Returns the campaigns flagged Conflict. |
-| `GET /campaigns?scope=ours\|all` | campaigns (`ours` by default; each carries `ours`) with their streams, draft offers, removed offers, pending/conflict/new/archived flags; per offer its `change` (`added` / `removed` / `share`), per stream `geo_added` / `geo_removed` and `errors` (why the draft can't be pushed). Every edit endpoint returns the campaign in this shape |
-| `GET /campaigns/defaults` | prefills the New campaign form: the next name, a generated alias, `[DEFAULT_GEO]`, the redirect URL |
+| `GET /campaigns` | every campaign with their streams, draft offers, removed offers, pending/conflict/new/archived flags; per offer its `change` (`added` / `removed` / `share`), per stream `geo_added` / `geo_removed` and `errors` (why the draft can't be pushed). Every edit endpoint returns the campaign in this shape |
+| `GET /campaigns/defaults` | prefills the New campaign form: the next name, a generated alias, `[DEFAULT_GEO]`, the redirect URL, and `name_prefix` (`CAMPAIGN_NAME_PREFIX`: the table's default search) |
 | `GET /campaigns/{id}` | one campaign, in the same shape as the list; `404` for an unknown id |
 | `POST /campaigns` | `{name?, alias?, countries?, domain_id, group_id?, traffic_source_id?, offer_ids[]}` → `201` with a new **draft** campaign (New, pending). Blank name/alias/countries use the defaults. Domain, group, source and offers must be active in the tracker (`422`); a duplicate alias is `409` |
 | `GET /tracker/offers?q=` · `GET /tracker/domains` · `GET /tracker/groups` · `GET /tracker/sources` | tracker lookups (cached for 60 s) |
@@ -243,7 +243,7 @@ Everything is set in `.env`. `.env.example` lists every variable.
 | `KEITARO_API_KEY` | an Admin API key created in Keitaro (required) |
 | `GEO_REDIRECT_URL` | where the geo stream sends visitors (`https://google.com`) |
 | `DEFAULT_GEO` | the default for the create form's Geo field (`AU`) |
-| `CAMPAIGN_NAME_PREFIX` | the prefix of new campaign names, and the "Ours" filter (`test_name_campaign`) |
+| `CAMPAIGN_NAME_PREFIX` | the prefix of new campaign names, and the campaigns table's default search (`test_name_campaign`) |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | the local database |
 | `API_PORT` / `DASHBOARD_PORT` | `8000` / `3000` |
 
