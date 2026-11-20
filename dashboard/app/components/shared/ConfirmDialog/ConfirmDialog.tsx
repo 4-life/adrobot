@@ -3,7 +3,7 @@ import { type ReactNode, useState } from "react";
 import { Button } from "@/components/shared/Button/Button";
 import { Dialog } from "@/components/shared/Dialog/Dialog";
 
-type Variant = "primary" | "secondary" | "danger";
+type Variant = "primary" | "secondary" | "danger" | "ghost";
 
 // A button that asks first: the action runs only on "confirm" (never window.confirm).
 export function ConfirmDialog({
