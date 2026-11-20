@@ -29,6 +29,9 @@ from app.tracker.port import (
     TrackerStream,
 )
 
+# Where the geo stream sends the visitors from its countries (the campaign's first stream).
+GEO_REDIRECT_URL = "https://google.com"
+
 
 @dataclass(frozen=True)
 class PushResult:
@@ -102,9 +105,7 @@ def _campaign_id(campaign: Campaign) -> int:
     return campaign.external_id
 
 
-async def _create(
-    store: Store, tracker: TrackerProvider, campaign: Campaign, redirect: str
-) -> None:
+async def _create(store: Store, tracker: TrackerProvider, campaign: Campaign) -> None:
     if campaign.external_id is None:
         if campaign.domain_id is None:
             raise DraftError("invalid", "A new campaign needs a domain")
@@ -121,7 +122,7 @@ async def _create(
     geo = stream_of(campaign, GEO)
     if geo.external_id is None:
         geo.external_id = await tracker.create_geo_stream(
-            NewGeoStream(_campaign_id(campaign), list(geo.draft_geo or []), redirect)
+            NewGeoStream(_campaign_id(campaign), list(geo.draft_geo or []), GEO_REDIRECT_URL)
         )
         await _log(store, campaign, "create geo stream")
     offers = stream_of(campaign, OFFERS)
@@ -160,7 +161,6 @@ async def push(
     store: Store,
     tracker: TrackerProvider,
     campaign: Campaign,
-    redirect_url: str,
     now: datetime | None = None,
 ) -> PushResult:
     now = now or datetime.now(UTC)
@@ -172,7 +172,7 @@ async def push(
     sent_offers = draft_offers(campaign)
     try:
         if campaign.is_new:
-            await _create(store, tracker, campaign, redirect_url)
+            await _create(store, tracker, campaign)
         else:
             await _update(store, tracker, campaign, now)
         stored = await tracker.get_streams(_campaign_id(campaign))

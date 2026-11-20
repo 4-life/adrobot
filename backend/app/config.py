@@ -18,7 +18,6 @@ class Settings(BaseSettings):
     keitaro_timeout_seconds: float = 30.0
 
     # Campaign defaults (docs/DESIGN.md: Creating a Campaign).
-    geo_redirect_url: str = "https://google.com"
     # MVP only (empty in production): the default name of new campaigns (prefix + N), the
     # campaigns table's default search, and whose streams Fetch streams reads. Empty: no
     # default name, no default search, and Fetch streams reads the campaign list only.

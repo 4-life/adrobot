@@ -57,7 +57,7 @@ Saving creates the campaign **as a draft** with a "New, not in Keitaro" badge. I
 
 1. `POST /campaigns`: name, alias, domain, group and source, with `type: position`.
 2. `POST /streams` for the geo stream:
-   - position 1, `schema: redirect`, `action_type: http`, `action_payload: GEO_REDIRECT_URL` (`https://google.com` by default);
+   - position 1, `schema: redirect`, `action_type: http`, `action_payload: https://google.com` (fixed: `GEO_REDIRECT_URL` in `app/campaigns/push.py`);
    - `filters: [{name: country, mode: accept, payload: <geo>}]`.
 3. `POST /streams` for the offers stream: position 2, the `offers` array with the calculated shares.
 
@@ -246,7 +246,6 @@ Everything is set in `.env`. `.env.example` lists every variable.
 | `TRACKER` | the tracker adapter: `keitaro`, or `fake` for local testing: in-memory sample data (20 offers, 3 of them archived; 3 campaigns, one with an unsupported layout), nothing reaches Keitaro, reset when the API restarts |
 | `KEITARO_URL` | the Keitaro panel's address without a path, e.g. `https://tracker.example.com` (required) |
 | `KEITARO_API_KEY` | an Admin API key created in Keitaro (required) |
-| `GEO_REDIRECT_URL` | where the geo stream sends visitors (`https://google.com`) |
 | `CAMPAIGN_NAME_PREFIX` | **MVP only, empty in production.** Set: new campaigns are named `prefix` + N, the table's search starts with it, and Fetch streams reads streams for those campaigns. Empty: you type the name, the search starts empty, and Fetch streams reads the campaign list only (`test_name_campaign` in `.env.example`) |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | the local database |
 | `API_PORT` / `DASHBOARD_PORT` | `8000` / `3000` |

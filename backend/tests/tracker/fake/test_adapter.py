@@ -61,7 +61,7 @@ async def test_a_new_campaign_is_created_and_read_back() -> None:
         offers=[OfferPick(606, "Sample offer 6"), OfferPick(607, "Sample offer 7")],
     )
 
-    result = await push(FakeStore(), kt, campaign, "https://example.com", NOW)
+    result = await push(FakeStore(), kt, campaign, NOW)
 
     assert result.mismatch == []
     assert not campaign_pending(campaign)
@@ -78,7 +78,7 @@ async def test_pushed_offers_are_what_the_next_fetch_sees() -> None:
     merge_streams(campaign, seeded.streams, NOW)
     drafts.remove_offer(stream_of(campaign, OFFERS), 603, NOW)
 
-    await push(FakeStore(), kt, campaign, "https://example.com", NOW)
+    await push(FakeStore(), kt, campaign, NOW)
 
     stored = await kt.get_streams(1001)
     assert stored is not None

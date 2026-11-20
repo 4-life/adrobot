@@ -15,6 +15,7 @@ from app.api.schemas import (
 )
 from app.campaigns.create import OfferPick, make_alias, new_draft, next_name, normalize_alias
 from app.campaigns.drafts import DraftError
+from app.campaigns.push import GEO_REDIRECT_URL
 from app.campaigns.sync import fetch_all, fetch_one
 from app.config import settings
 from app.db import get_session
@@ -65,7 +66,7 @@ async def campaign_defaults(session: Session) -> CampaignDefaultsOut:
         name=name,
         alias=make_alias(name) if name else "",
         countries=[],
-        redirect_url=settings.geo_redirect_url,
+        redirect_url=GEO_REDIRECT_URL,
         name_prefix=settings.campaign_name_prefix,
     )
 

@@ -13,7 +13,6 @@ from app.tracker.port import GEO, OFFERS, OfferShare, TrackerError
 from tests.fakes import FakeStore, FakeTracker
 
 NOW = datetime(2026, 1, 1, tzinfo=UTC)
-REDIRECT = "https://example.com"
 
 
 def new_campaign() -> Campaign:
@@ -54,7 +53,7 @@ def existing() -> tuple[FakeTracker, Campaign]:
 async def test_new_campaign_is_created_step_by_step() -> None:
     tracker, campaign = FakeTracker(), new_campaign()
 
-    result = await push(FakeStore(), tracker, campaign, REDIRECT, NOW)
+    result = await push(FakeStore(), tracker, campaign, NOW)
 
     assert result.pushed and result.mismatch == []
     assert tracker.calls == [
@@ -73,13 +72,13 @@ async def test_new_campaign_is_created_step_by_step() -> None:
 async def test_failed_create_resumes_from_the_failed_step() -> None:
     tracker, campaign = FakeTracker(fail_on="create_offers_stream"), new_campaign()
     with pytest.raises(TrackerError):
-        await push(FakeStore(), tracker, campaign, REDIRECT, NOW)
+        await push(FakeStore(), tracker, campaign, NOW)
     assert (campaign.external_id, stream_of(campaign, GEO).external_id) == (1001, 501)
     assert stream_of(campaign, OFFERS).external_id is None
     assert campaign.is_new
 
     tracker.calls.clear()
-    await push(FakeStore(), tracker, campaign, REDIRECT, NOW)
+    await push(FakeStore(), tracker, campaign, NOW)
 
     assert tracker.calls == ["create_offers_stream", "get_streams"]
     assert not campaign.is_new
@@ -89,7 +88,7 @@ async def test_changed_offers_are_pushed_and_synced() -> None:
     tracker, campaign = existing()
     drafts.remove_offer(stream_of(campaign, OFFERS), 602, NOW)
 
-    result = await push(FakeStore(), tracker, campaign, REDIRECT, NOW)
+    result = await push(FakeStore(), tracker, campaign, NOW)
 
     assert result.pushed and result.mismatch == []
     assert tracker.calls == ["get_streams", "push_offers", "get_streams"]
@@ -103,7 +102,7 @@ async def test_only_the_changed_stream_is_pushed() -> None:
     tracker, campaign = existing()
     drafts.set_geo(stream_of(campaign, GEO), ["NZ"])
 
-    await push(FakeStore(), tracker, campaign, REDIRECT, NOW)
+    await push(FakeStore(), tracker, campaign, NOW)
 
     assert tracker.calls == ["get_streams", "push_geo", "get_streams"]
     assert tracker.geo == ["NZ"]
@@ -115,7 +114,7 @@ async def test_tracker_changed_since_fetch_is_a_conflict() -> None:
     tracker.offers = [OfferShare(601, 70), OfferShare(602, 30)]  # edited in the tracker
 
     with pytest.raises(DraftError, match="changed since the last fetch"):
-        await push(FakeStore(), tracker, campaign, REDIRECT, NOW)
+        await push(FakeStore(), tracker, campaign, NOW)
 
     assert campaign.conflict
     assert tracker.calls == ["get_streams"]
@@ -129,11 +128,11 @@ async def test_conflicted_campaign_is_refused_until_resolved() -> None:
     campaign.conflict = True
 
     with pytest.raises(DraftError, match="keep the draft or cancel"):
-        await push(FakeStore(), tracker, campaign, REDIRECT, NOW)
+        await push(FakeStore(), tracker, campaign, NOW)
     assert tracker.calls == []
 
     campaign.conflict = False  # resolved: keep the draft
-    await push(FakeStore(), tracker, campaign, REDIRECT, NOW)
+    await push(FakeStore(), tracker, campaign, NOW)
     assert tracker.geo == ["NZ"]
 
 
@@ -143,14 +142,14 @@ async def test_invalid_draft_is_refused() -> None:
     drafts.set_pin(stream_of(campaign, OFFERS), 602, True, 40)
 
     with pytest.raises(DraftError, match="over 100%"):
-        await push(FakeStore(), tracker, campaign, REDIRECT, NOW)
+        await push(FakeStore(), tracker, campaign, NOW)
     assert tracker.calls == []
 
 
 async def test_nothing_pending_pushes_nothing() -> None:
     tracker, campaign = existing()
 
-    result = await push(FakeStore(), tracker, campaign, REDIRECT, NOW)
+    result = await push(FakeStore(), tracker, campaign, NOW)
 
     assert not result.pushed
     assert tracker.calls == []
@@ -161,7 +160,7 @@ async def test_tracker_storing_something_else_is_reported_and_followed() -> None
     tracker.keep_removed = True  # a tracker that merges offers instead of replacing them
     drafts.remove_offer(stream_of(campaign, OFFERS), 602, NOW)
 
-    result = await push(FakeStore(), tracker, campaign, REDIRECT, NOW)
+    result = await push(FakeStore(), tracker, campaign, NOW)
 
     assert result.mismatch and result.mismatch[0].startswith("Offers: sent")
     assert drafts.find_offer(stream_of(campaign, OFFERS), 602).synced_active
@@ -171,7 +170,7 @@ async def test_tracker_storing_something_else_is_reported_and_followed() -> None
 async def test_every_step_is_logged() -> None:
     store, tracker, campaign = FakeStore(), FakeTracker(), new_campaign()
 
-    await push(store, tracker, campaign, REDIRECT, NOW)
+    await push(store, tracker, campaign, NOW)
 
     steps = [getattr(entry, "step", None) for entry in store.added]
     assert steps == ["create campaign", "create geo stream", "create offers stream", "done"]

@@ -20,7 +20,6 @@ from app.campaigns import drafts
 from app.campaigns.drafts import DraftError
 from app.campaigns.pending import campaign_pending
 from app.campaigns.push import push
-from app.config import settings
 from app.db import get_session
 from app.models.campaign import Campaign
 from app.tracker.port import TrackerError, TrackerProvider
@@ -34,7 +33,7 @@ Tracker = Annotated[TrackerProvider, Depends(get_tracker)]
 @router.post("/campaigns/{campaign_id}/push")
 async def push_campaign(campaign_id: int, session: Session, tracker: Tracker) -> PushOut:
     campaign = await load_campaign(session, campaign_id)
-    result = await push(session, tracker, campaign, settings.geo_redirect_url)
+    result = await push(session, tracker, campaign)
     await session.commit()
     return PushOut(pushed=result.pushed, mismatch=result.mismatch, campaign=campaign_out(campaign))
 
@@ -46,7 +45,7 @@ async def push_all(session: Session, tracker: Tracker) -> PushAllOut:
     results: list[PushItemOut] = []
     for campaign in [c for c in campaigns if campaign_pending(c)]:
         try:
-            result = await push(session, tracker, campaign, settings.geo_redirect_url)
+            result = await push(session, tracker, campaign)
         except (DraftError, TrackerError) as error:
             item = PushItemOut(
                 campaign_id=campaign.id,
