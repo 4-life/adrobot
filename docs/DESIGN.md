@@ -96,7 +96,8 @@ A campaign is **pending** when any draft differs from its synced state. A pendin
 A new campaign is always pending.
 
 **Fetch streams**
-- Reads all campaigns, their streams (8 campaigns at a time) and offers, plus the offer and source names, and replaces every synced state. Domain and group names come with each campaign.
+- Reads all campaigns, plus the offer and source names, but **streams only for ours** (name starts with `CAMPAIGN_NAME_PREFIX`, 8 at a time). Reading streams takes one request per campaign, which is what made a full fetch on a shared tracker slow. Domain and group names come with each campaign.
+- Other campaigns keep their last known streams. Their page reads them with **Fetch from Keitaro**, automatically when it opens and they were never read.
 - **Layout**: exactly two live streams. The first has a `country` filter and no offers (the geo stream), and the second isn't a plain redirect (the offers stream). Disabled offers count as removed. Any other campaign is shown read-only as **Unsupported layout**.
 - An offer that is new in Keitaro is appended to the draft too, even when the draft has pending changes.
 - A campaign with pending changes keeps its draft.

@@ -48,8 +48,10 @@ class TrackerCampaign:
     group_name: str | None
     traffic_source_id: int | None
     traffic_source_name: str | None
-    # [geo, offers]; None when the campaign isn't laid out that way (shown read-only).
+    # [geo, offers]; None when the campaign isn't laid out that way (shown read-only), or when
+    # its streams weren't read (`streams_fetched` False: keep what was known).
     streams: list[TrackerStream] | None
+    streams_fetched: bool = True
 
 
 @dataclass(frozen=True)
@@ -101,8 +103,11 @@ class TrackerError(Exception):
 
 
 class TrackerProvider(Protocol):
-    async def fetch_campaigns(self) -> list[TrackerCampaign]:
-        """Every campaign with its streams and offers (offer and source names resolved)."""
+    async def fetch_campaigns(self, streams_prefix: str = "") -> list[TrackerCampaign]:
+        """Every campaign (offer and source names resolved). Streams are read only for those
+        whose name starts with `streams_prefix` ("": all); the rest have `streams_fetched`
+        False. Reading streams is one request per campaign: on a shared tracker, the slow part.
+        """
         ...
 
     async def fetch_campaign(self, campaign_id: int) -> TrackerCampaign | None:

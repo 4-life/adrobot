@@ -25,7 +25,8 @@ def apply_campaign_fields(campaign: Campaign, tracked: TrackerCampaign, now: dat
     campaign.group_name = tracked.group_name
     campaign.traffic_source_id = tracked.traffic_source_id
     campaign.traffic_source_name = tracked.traffic_source_name
-    campaign.layout_supported = tracked.streams is not None
+    if tracked.streams_fetched:  # not read this time: keep what was known
+        campaign.layout_supported = tracked.streams is not None
     campaign.fetched_at = now
 
 

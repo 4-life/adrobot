@@ -74,7 +74,10 @@ def to_campaign(
     streams: list[dict[str, Any]] | None,
     offer_names: dict[int, str],
     source_names: dict[int, str],
+    streams_fetched: bool = True,
 ) -> TrackerCampaign:
+    """`streams`: the raw streams; None for an archived campaign, or one not read
+    (`streams_fetched` False)."""
     if kt.id is None:
         raise ValueError("a Keitaro campaign without an id")
     source_id = kt.traffic_source_id or None
@@ -90,6 +93,7 @@ def to_campaign(
         traffic_source_id=source_id,
         traffic_source_name=source_names.get(source_id) if source_id else None,
         streams=detect_layout(streams, offer_names) if streams is not None else None,
+        streams_fetched=streams_fetched,
     )
 
 
@@ -111,19 +115,33 @@ class KeitaroTracker:
     async def aclose(self) -> None:
         await self._kt.aclose()
 
-    async def fetch_campaigns(self) -> list[TrackerCampaign]:
-        return await _translated(self._fetch_campaigns())
+    async def fetch_campaigns(self, streams_prefix: str = "") -> list[TrackerCampaign]:
+        return await _translated(self._fetch_campaigns(streams_prefix))
 
-    async def _fetch_campaigns(self) -> list[TrackerCampaign]:
+    async def _fetch_campaigns(self, streams_prefix: str) -> list[TrackerCampaign]:
         campaigns, offers, sources = await asyncio.gather(
             self._kt.list_campaigns(), self._kt.list_offers(), self._kt.list_sources()
         )
         offer_names = {o.id: o.name for o in offers if o.id is not None and o.name}
         source_names = {s.id: s.name for s in sources if s.id is not None and s.name}
-        live = [c.id for c in campaigns if c.id is not None and c.state != KEITARO_ARCHIVED]
+
+        def wanted(c: Campaign) -> bool:
+            return (c.name or "").startswith(streams_prefix)
+
+        live = [
+            c.id
+            for c in campaigns
+            if c.id is not None and c.state != KEITARO_ARCHIVED and wanted(c)
+        ]
         streams = await self._streams_of(live)
         return [
-            to_campaign(c, streams.get(c.id), offer_names, source_names)
+            to_campaign(
+                c,
+                streams.get(c.id),
+                offer_names,
+                source_names,
+                streams_fetched=c.state == KEITARO_ARCHIVED or wanted(c),
+            )
             for c in campaigns
             if c.id is not None
         ]

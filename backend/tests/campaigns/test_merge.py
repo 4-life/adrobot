@@ -2,10 +2,10 @@ from datetime import UTC, datetime
 
 from sqlalchemy import inspect
 
-from app.campaigns.merge import merge_streams
+from app.campaigns.merge import apply_campaign_fields, merge_streams
 from app.campaigns.pending import campaign_pending
 from app.models.campaign import Campaign, Stream, StreamOffer
-from app.tracker.port import GEO, OFFERS, TrackerOffer, TrackerStream
+from app.tracker.port import GEO, OFFERS, TrackerCampaign, TrackerOffer, TrackerStream
 
 NOW = datetime(2026, 1, 1, tzinfo=UTC)
 NAMES = {601: "Offer A", 602: "Offer B", 603: "Offer C"}
@@ -162,3 +162,27 @@ def test_streams_created_by_a_fetch_have_their_offers_loaded() -> None:
 
     for stream in campaign.streams:
         assert "offers" not in inspect(stream).unloaded
+
+
+def test_campaign_whose_streams_were_not_read_keeps_its_layout() -> None:
+    campaign = synced(new_campaign())
+    campaign.layout_supported = True
+    not_read = TrackerCampaign(
+        external_id=1001,
+        name="other",
+        alias="o",
+        state="active",
+        domain_id=None,
+        domain_name=None,
+        group_id=None,
+        group_name=None,
+        traffic_source_id=None,
+        traffic_source_name=None,
+        streams=None,
+        streams_fetched=False,
+    )
+
+    apply_campaign_fields(campaign, not_read, NOW)
+
+    assert campaign.layout_supported
+    assert [o.offer_id for o in offers_of(campaign).offers] == [601, 602]

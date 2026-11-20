@@ -130,3 +130,10 @@ async def test_fetch_one_refuses_a_new_draft() -> None:
     campaign = Campaign(conflict=False, is_new=True, streams=[], external_id=None)
     with pytest.raises(DraftError, match="push it first"):
         await fetch_one(FakeStore(), tracker(), campaign, NOW)
+
+
+async def test_fetch_with_a_prefix_skips_the_others_streams() -> None:
+    campaigns = {c.external_id: c for c in await tracker().fetch_campaigns("test_name_campaign")}
+
+    assert campaigns[1001].streams_fetched and campaigns[1001].streams is not None
+    assert not campaigns[1002].streams_fetched and campaigns[1002].streams is None

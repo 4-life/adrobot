@@ -65,7 +65,7 @@ class FakeTracker:
     async def fetch_campaign(self, campaign_id: int) -> TrackerCampaign | None:
         raise NotImplementedError
 
-    async def fetch_campaigns(self) -> list[TrackerCampaign]:
+    async def fetch_campaigns(self, streams_prefix: str = "") -> list[TrackerCampaign]:
         raise NotImplementedError
 
     async def list_offers(self) -> list[LookupItem]:

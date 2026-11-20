@@ -30,7 +30,8 @@ Tracker = Annotated[TrackerProvider, Depends(get_tracker)]
 
 @router.post("/sync/fetch")
 async def fetch(session: Session, tracker: Tracker) -> FetchOut:
-    result = await fetch_all(session, tracker)
+    # Streams only for ours (the slow part on a shared tracker); the rest on their page.
+    result = await fetch_all(session, tracker, settings.campaign_name_prefix)
     return FetchOut(
         fetched_at=result.fetched_at, campaigns=result.campaigns, conflicts=result.conflicts
     )

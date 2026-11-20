@@ -185,7 +185,7 @@ class InMemoryTracker:
             ),
         ]
 
-    def _campaign(self, c: _Campaign) -> TrackerCampaign:
+    def _campaign(self, c: _Campaign, with_streams: bool = True) -> TrackerCampaign:
         return TrackerCampaign(
             external_id=c.id,
             name=c.name,
@@ -197,11 +197,15 @@ class InMemoryTracker:
             group_name=_name(self._s.groups, c.group_id),
             traffic_source_id=c.source_id,
             traffic_source_name=_name(self._s.sources, c.source_id),
-            streams=self._streams(c),
+            streams=self._streams(c) if with_streams else None,
+            streams_fetched=with_streams,
         )
 
-    async def fetch_campaigns(self) -> list[TrackerCampaign]:
-        return [self._campaign(c) for c in self._s.campaigns.values()]
+    async def fetch_campaigns(self, streams_prefix: str = "") -> list[TrackerCampaign]:
+        return [
+            self._campaign(c, with_streams=c.name.startswith(streams_prefix))
+            for c in self._s.campaigns.values()
+        ]
 
     async def fetch_campaign(self, campaign_id: int) -> TrackerCampaign | None:
         campaign = self._s.campaigns.get(campaign_id)

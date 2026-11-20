@@ -23,9 +23,13 @@ class FetchResult:
     conflicts: list[int]  # AdRobot campaign ids flagged Conflict
 
 
-async def fetch_all(session: AsyncSession, tracker: TrackerProvider) -> FetchResult:
+async def fetch_all(
+    session: AsyncSession, tracker: TrackerProvider, streams_prefix: str = ""
+) -> FetchResult:
+    """Every campaign; streams only for those whose name starts with `streams_prefix` ("": all).
+    The others keep their last known streams: their page's Fetch reads them."""
     now = datetime.now(UTC)
-    tracked_campaigns = await tracker.fetch_campaigns()
+    tracked_campaigns = await tracker.fetch_campaigns(streams_prefix)
 
     loaded = await session.scalars(
         select(Campaign)
@@ -40,11 +44,13 @@ async def fetch_all(session: AsyncSession, tracker: TrackerProvider) -> FetchRes
         seen.add(tracked.external_id)
         campaign = local.get(tracked.external_id)
         if campaign is None:
-            campaign = Campaign(conflict=False, is_new=False, streams=[])  # no lazy loads later
+            # streams=[]: no lazy loads later; layout unknown until its streams are read.
+            campaign = Campaign(conflict=False, is_new=False, layout_supported=True, streams=[])
             session.add(campaign)
         apply_campaign_fields(campaign, tracked, now)
-        if tracked.streams is not None and merge_streams(campaign, tracked.streams, now):
-            conflicts.append(campaign)
+        if tracked.streams_fetched and tracked.streams is not None:
+            if merge_streams(campaign, tracked.streams, now):
+                conflicts.append(campaign)
 
     for external_id, campaign in local.items():
         if external_id not in seen:

@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 import { Button } from "@/components/shared/Button/Button";
 import { Spinner } from "@/components/shared/Spinner/Spinner";
 
@@ -6,9 +8,20 @@ import type { Campaign } from "../../types";
 import { useCampaignAction } from "../../useCampaignAction";
 
 // Re-reads this one campaign from Keitaro (after a change made there): fast, unlike the full
-// Fetch streams. A pending draft is kept; a change under it shows as a conflict.
+// Fetch streams. A pending draft is kept; a change under it shows as a conflict. Fetch streams
+// reads streams only for our campaigns, so another's are read here, as soon as its page opens.
 export function FetchCampaignButton({ campaign }: { campaign: Campaign }) {
   const action = useCampaignAction();
+  const { run } = action;
+  const autoFetched = useRef(false);
+  const neverRead = campaign.streams.length === 0;
+
+  useEffect(() => {
+    if (neverRead && !autoFetched.current) {
+      autoFetched.current = true;
+      run("fetch-one", { campaignId: campaign.id });
+    }
+  }, [neverRead, run, campaign.id]);
 
   return (
     <div className="space-y-2">

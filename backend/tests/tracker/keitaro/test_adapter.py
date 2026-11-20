@@ -106,3 +106,20 @@ async def test_data_off_schema_becomes_a_tracker_error_without_values() -> None:
     assert "models_overrides.py" in raised.value.message
     assert "not a number" not in raised.value.message
     assert "Secret Offer Name" not in raised.value.message
+
+
+async def test_streams_are_read_only_for_campaigns_with_the_prefix() -> None:
+    requested: list[str] = []
+
+    def recording(request: httpx.Request) -> httpx.Response:
+        requested.append(request.url.path)
+        return routes(request)
+
+    async with tracker(recording) as kt:
+        campaigns = await kt.fetch_campaigns("test_sample_campaign1")
+
+    first, second = campaigns
+    assert first.streams_fetched and first.streams is not None
+    assert not second.streams_fetched and second.streams is None
+    assert "/admin_api/v1/campaigns/1001/streams" in requested
+    assert "/admin_api/v1/campaigns/1002/streams" not in requested
