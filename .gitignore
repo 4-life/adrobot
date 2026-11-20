@@ -1,0 +1,19 @@
+.env
+# Raw Keitaro recordings (real tracker data, campaign tokens) never go in the repo.
+# Fixtures are synthetic: made-up ids, names and domains only.
+backend/tests/fixtures/keitaro/*
+!backend/tests/fixtures/keitaro/*_sample.json
+# Keitaro's Admin API schema is not ours to publish: each developer downloads it from their
+# own Keitaro (see docs/DESIGN.md: Keitaro Integration). Never commit it.
+backend/app/tracker/keitaro/openapi.yaml
+openapi.yaml
+swagger.yaml
+swagger.json
+__pycache__/
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+node_modules/
+dashboard/build/
+dashboard/.react-router/

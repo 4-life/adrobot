@@ -1,0 +1,131 @@
+"""The Keitaro adapter: implements the tracker port on top of the Keitaro Admin API.
+
+The only module the rest of AdRobot reaches Keitaro through (via app/tracker/factory.py).
+Keitaro's models and errors never leave this package: they're mapped to app/tracker/port.py.
+"""
+
+import asyncio
+from collections.abc import Awaitable, Callable
+from types import TracebackType
+from typing import Any, Self
+
+from app.tracker.keitaro.client import KeitaroClient, KeitaroError
+from app.tracker.keitaro.layout import detect_layout
+from app.tracker.keitaro.models_overrides import Campaign
+from app.tracker.port import CampaignState, LookupItem, TrackerCampaign, TrackerError
+
+STREAM_FETCH_CONCURRENCY = 8
+ACTIVE = "active"
+KEITARO_ARCHIVED = "deleted"
+STATES: dict[str, CampaignState] = {
+    "active": "active",
+    "disabled": "disabled",
+    KEITARO_ARCHIVED: "archived",
+}
+
+
+async def _translated[T](call: Awaitable[T]) -> T:
+    try:
+        return await call
+    except KeitaroError as error:
+        raise TrackerError(error.status, error.message) from error
+
+
+def _lookup(rows: list[tuple[int | None, str | None, str | None]]) -> list[LookupItem]:
+    return [
+        LookupItem(id=i, name=name or f"#{i}", active=(state or ACTIVE) == ACTIVE)
+        for i, name, state in rows
+        if i is not None
+    ]
+
+
+def to_campaign(
+    kt: Campaign,
+    streams: list[dict[str, Any]] | None,
+    offer_names: dict[int, str],
+    source_names: dict[int, str],
+) -> TrackerCampaign:
+    if kt.id is None:
+        raise ValueError("a Keitaro campaign without an id")
+    source_id = kt.traffic_source_id or None
+    return TrackerCampaign(
+        external_id=kt.id,
+        name=kt.name or "",
+        alias=kt.alias or "",
+        state=STATES.get(kt.state or ACTIVE, "active"),
+        domain_id=kt.domain_id,
+        domain_name=kt.domain or None,
+        group_id=kt.group_id or None,
+        group_name=kt.group or None,
+        traffic_source_id=source_id,
+        traffic_source_name=source_names.get(source_id) if source_id else None,
+        streams=detect_layout(streams, offer_names) if streams is not None else None,
+    )
+
+
+class KeitaroTracker:
+    def __init__(self, client: KeitaroClient) -> None:
+        self._kt = client
+
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        await self.aclose()
+
+    async def aclose(self) -> None:
+        await self._kt.aclose()
+
+    async def fetch_campaigns(self) -> list[TrackerCampaign]:
+        return await _translated(self._fetch_campaigns())
+
+    async def _fetch_campaigns(self) -> list[TrackerCampaign]:
+        campaigns, offers, sources = await asyncio.gather(
+            self._kt.list_campaigns(), self._kt.list_offers(), self._kt.list_sources()
+        )
+        offer_names = {o.id: o.name for o in offers if o.id is not None and o.name}
+        source_names = {s.id: s.name for s in sources if s.id is not None and s.name}
+        live = [c.id for c in campaigns if c.id is not None and c.state != KEITARO_ARCHIVED]
+        streams = await self._streams_of(live)
+        return [
+            to_campaign(c, streams.get(c.id), offer_names, source_names)
+            for c in campaigns
+            if c.id is not None
+        ]
+
+    async def _streams_of(self, campaign_ids: list[int]) -> dict[int, list[dict[str, Any]]]:
+        """Each campaign's streams as raw JSON, a few campaigns at a time."""
+        limit = asyncio.Semaphore(STREAM_FETCH_CONCURRENCY)
+
+        async def one(campaign_id: int) -> tuple[int, list[dict[str, Any]]]:
+            async with limit:
+                streams = await self._kt.list_streams(campaign_id)
+            raws = [s.model_dump(mode="json", by_alias=True, exclude_unset=True) for s in streams]
+            return campaign_id, raws
+
+        return dict(await asyncio.gather(*(one(i) for i in campaign_ids)))
+
+    async def list_offers(self) -> list[LookupItem]:
+        offers = await _translated(self._kt.list_offers())
+        return _lookup([(o.id, o.name, o.state) for o in offers])
+
+    async def list_domains(self) -> list[LookupItem]:
+        domains = await _translated(self._kt.list_domains())
+        return _lookup([(d.id, d.name, d.state) for d in domains])
+
+    async def list_groups(self) -> list[LookupItem]:
+        groups = await _translated(self._kt.list_groups())
+        return _lookup([(g.id, g.name, None) for g in groups])
+
+    async def list_sources(self) -> list[LookupItem]:
+        sources = await _translated(self._kt.list_sources())
+        return _lookup([(s.id, s.name, s.state) for s in sources])
+
+
+def create(factory: Callable[[], KeitaroClient] = KeitaroClient.from_settings) -> KeitaroTracker:
+    return KeitaroTracker(factory())

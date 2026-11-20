@@ -1,0 +1,44 @@
+name: CI
+
+# Every push and pull request: the same checks as scripts/check.sh locally
+# (Ruff, mypy, pytest, the dashboard typecheck). The Keitaro schema is git-ignored, so CI
+# uses the committed models.py as is.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Backend dependencies
+        working-directory: backend
+        run: uv sync --locked
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Dashboard dependencies
+        working-directory: dashboard
+        run: npm ci
+
+      - name: Checks
+        run: bash scripts/check.sh
