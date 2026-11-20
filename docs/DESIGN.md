@@ -140,9 +140,11 @@ Domains, groups and traffic sources are cached the same way.
 - **Schema**: `backend/app/tracker/keitaro/openapi.yaml` (OpenAPI 3.0.0, the Keitaro Admin API v1). It is **not in the repo**: it's Keitaro's to publish, not ours, so it's git-ignored. Download it from your own Keitaro's Admin API docs into that path when you need to regenerate the models. `SCHEMA_VERSION` notes the Keitaro version it came from.
 - **Models**: `scripts/gen-keitaro.sh` runs `datamodel-code-generator` (YAML input, Pydantic v2 output, unknown fields allowed) and writes `backend/app/tracker/keitaro/models.py`, formatted with Ruff. The generated file is committed (CI has no schema) and never edited by hand.
   - `scripts/check.sh` regenerates it when the schema is present locally (commit any change). Without the schema, as in CI, the committed file is used.
+  - Data that doesn't match the schema doesn't crash: the adapter turns it into a tracker error (`502`) naming the field path, never its values. Fix it in `models_overrides.py`.
   - `models_overrides.py` fixes the places where the schema is wrong or incomplete. Known so far:
     - `Campaign` has no `domain_id`; only `CampaignRequest` does. The real response does include `domain_id`, along with `domain` and `group` names.
     - `Campaign.bind_visitors` is an enum `s` / `sl` / `slo`, but Keitaro sends `""` when binding is off.
+    - `Offer.values` and `Offer.country` are lists, but Keitaro sends `""` when they're empty.
     - `group_id` is `integer` in `Campaign` but `string` in `CampaignRequest` / `DomainRequest`.
     - `Filter.payload` is typed as a string, but a `country` filter carries a list.
     - `Report.rows` is typed as an array of strings (not used).

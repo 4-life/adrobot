@@ -28,8 +28,9 @@ STREAMS = [
     },
 ]
 OFFERS_LIST = [
-    {"id": 601, "name": "Sample Offer", "state": "active"},
-    {"id": 602, "name": "Sample Old Offer", "state": "deleted"},
+    # Keitaro sends "" for an offer's empty `values` / `country`, where the schema says a list.
+    {"id": 601, "name": "Sample Offer", "state": "active", "values": "", "country": ""},
+    {"id": 602, "name": "Sample Old Offer", "state": "deleted", "values": [], "country": ["AU"]},
 ]
 SOURCES = [{"id": 21, "name": "Sample Source", "state": "active"}]
 
@@ -90,3 +91,17 @@ async def test_keitaro_errors_become_tracker_errors() -> None:
             await kt.list_domains()
 
     assert (raised.value.status, raised.value.message) == (401, "Bad key")
+
+
+async def test_data_off_schema_becomes_a_tracker_error_without_values() -> None:
+    off_schema = [{"id": 601, "name": "Secret Offer Name", "payout_value": "not a number"}]
+
+    async with tracker(lambda _: httpx.Response(200, json=off_schema)) as kt:
+        with pytest.raises(TrackerError) as raised:
+            await kt.list_offers()
+
+    assert raised.value.status == 502
+    assert "0.payout_value" in raised.value.message
+    assert "models_overrides.py" in raised.value.message
+    assert "not a number" not in raised.value.message
+    assert "Secret Offer Name" not in raised.value.message

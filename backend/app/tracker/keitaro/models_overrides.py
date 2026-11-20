@@ -10,7 +10,6 @@ from app.tracker.keitaro import models
 
 Domain = models.Domain
 Group = models.Group
-Offer = models.Offer
 OfferStream = models.OfferStream
 OfferStreamRequest = models.OfferStreamRequest
 Source = models.Source
@@ -25,6 +24,14 @@ class Campaign(models.Campaign):
     domain_id: int | None = None
     domain: str | None = None  # the domain's URL, e.g. "https://example.com/"
     group: str | None = None  # the group's name; "" without a group
+
+
+class Offer(models.Offer):
+    """The schema types `values` and `country` as lists; Keitaro sends "" when they're empty.
+    AdRobot reads neither, so any shape is accepted."""
+
+    values: Any = None
+    country: Any = None
 
 
 class CampaignRequest(models.CampaignRequest):

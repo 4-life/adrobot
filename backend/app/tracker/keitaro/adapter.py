@@ -9,6 +9,8 @@ from collections.abc import Awaitable, Callable
 from types import TracebackType
 from typing import Any, Self
 
+from pydantic import ValidationError
+
 from app.tracker.keitaro import payloads
 from app.tracker.keitaro.client import KeitaroClient, KeitaroError
 from app.tracker.keitaro.layout import detect_layout
@@ -26,6 +28,7 @@ from app.tracker.port import (
 )
 
 STREAM_FETCH_CONCURRENCY = 8
+UNEXPECTED_DATA = 502  # TrackerError.status: Keitaro answered, but not as its schema says
 ACTIVE = "active"
 KEITARO_ARCHIVED = "deleted"
 STATES: dict[str, CampaignState] = {
@@ -36,10 +39,25 @@ STATES: dict[str, CampaignState] = {
 
 
 async def _translated[T](call: Awaitable[T]) -> T:
+    """Keitaro's errors, and data that doesn't match its schema, become TrackerError."""
     try:
         return await call
     except KeitaroError as error:
         raise TrackerError(error.status, error.message) from error
+    except ValidationError as error:
+        raise TrackerError(UNEXPECTED_DATA, unexpected_data(error)) from error
+
+
+def unexpected_data(error: ValidationError) -> str:
+    """Where and how Keitaro's data didn't match: the field path and pydantic's message, with
+    no values (they can be real tracker data)."""
+    first = error.errors(include_input=False, include_url=False)[0]
+    path = ".".join(str(part) for part in first["loc"])
+    more = f" (+{error.error_count() - 1} more)" if error.error_count() > 1 else ""
+    return (
+        f"Keitaro sent data that doesn't match its schema at {error.title} {path}: "
+        f"{first['msg']}{more}. Add a fix in models_overrides.py"
+    )
 
 
 def _lookup(rows: list[tuple[int | None, str | None, str | None]]) -> list[LookupItem]:
